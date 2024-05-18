@@ -62,6 +62,7 @@ class User:
                 if username == self.username:
                     raise Exception("Duplicate username")
         self.write_info()
+        return self.username
 
     def write_info(self):
         with open("info/users.csv", "a", newline="") as users_info:
@@ -83,3 +84,23 @@ class User:
                         raise Exception("Your account is deactive.")
             else:
                 raise Exception("Wrong username or password.")
+        return self.username
+
+    def get_leader_projects(self):
+        leader_projects = []
+        with open("info/project.csv", "r") as project_info:
+            reader = csv.reader(project_info)
+            for info in reader:
+                if self.username == info[4]:
+                    leader_projects.append(info)
+        return leader_projects
+
+    def get_user_projects(self):
+        user_projects = []
+        with open("info/project.csv", "r") as project_info:
+            reader = csv.reader(project_info)
+            for info in reader:
+                for member in info[5:]:
+                    if self.username == member:
+                        user_projects.append(info)
+        return user_projects
