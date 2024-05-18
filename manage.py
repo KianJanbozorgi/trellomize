@@ -3,8 +3,9 @@ import csv
 from pathlib import Path
 import shutil
 from menu import console, Menu
+from util import File
 
-manager_file = Path("manager.csv")
+manager_file = File("manager.csv")
 info_dir = Path("info")
 
 
@@ -19,18 +20,11 @@ class Manager:
         parser.add_argument("--password", type=str)
         return parser.parse_args()
 
-    def write_info(self):
-        with open("manager.csv", "a", newline="") as manger_info:
-            writer = csv.writer(manger_info)
-            writer.writerow(["username", "password"])
-            writer.writerow([self.args.username, self.args.password])
-
     def exist(self):
         try:
-            with open("manager.csv", "r") as manger_info:
-                reader = csv.reader(manger_info)
-                if len([*reader]) == 2:
-                    return True
+            reader = manager_file.read()
+            if len(reader) == 2:
+                return True
         except FileNotFoundError:
             pass
         return False
@@ -38,8 +32,9 @@ class Manager:
     def sign_up(self):
         console.clear()
         if not self.exist():
-            manager.write_info()
-            print("Signed up successfully")
+            manager_file.append(["username", "password"])
+            manager_file.append([self.args.username, self.args.password])
+            print("signed up successfully")
         else:
             print("System manager is already built.")
 
