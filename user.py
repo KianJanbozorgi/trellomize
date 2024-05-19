@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 from util import File
+import bcrypt
 
 info_dir = Path("info")
 users = Path("info/users.csv")
@@ -47,6 +48,14 @@ class User:
         if not re.match(pattern, self.password):
             raise ValueError(f"\n{invalid_password}")
 
+    def hash_password(self, password):
+        salt = bcrypt.gensalt(rounds=12)
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed_password.decode('utf-8')
+
+    def check_pass(self, entered_password, stored_password):
+        return bcrypt.checkpw(entered_password.encode('utf-8'), stored_password.encode('utf-8'))
+
     def sign_up(self):
         self.email = input("-Please enter a valid email address: ")
         self.check_email()
@@ -62,7 +71,7 @@ class User:
             if username == self.username:
                 raise Exception("Duplicate username")
         users_file.append([self.email, self.username,
-                          self.password, self.account])
+                          self.hash_password(self.password), self.account])
         return self.username
 
     def log_in(self):
@@ -71,7 +80,7 @@ class User:
         self.make_dir_or_file()
         reader = users_file.read()
         for email, username, password, account in reader:
-            if username == self.username and password == self.password:
+            if username == self.username and self.check_pass(self.password, password):
                 if account == "active":
                     break
                 else:
