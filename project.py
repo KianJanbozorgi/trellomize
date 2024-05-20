@@ -14,17 +14,17 @@ class Project:
         self.delete_member = []
         self.delete_project = False
 
-    def creat(self):
-        console.clear()
-        self.name = input("Project Name: ")
-        self.Id = input("Id: ")
+    def create(self,id,title,description,leader,members):
+        self.Id = id
         try:
             self.check_id_unique()
         except Exception as ex:
             print(ex)
         else:
-            self.title = input("Title: ")
-            self.Description = input("Description: ")
+            self.title = title
+            self.Description = description
+            self.leader = leader
+            self.members = members
             self.write_to_file()
 
     def check_id_unique(self):
@@ -51,9 +51,9 @@ class Project:
     def write_to_file(self):
         if not project.exists():
             project_file.write(
-                ["Name", "Id", "Title", "Description", "Leader"])
+                [ "Id", "Title", "Description", "Leader" ,"Members"])
         project_file.append(
-            [self.name, self.Id, self.title, self.Description, username])
+            [self.Id, self.title, self.Description, self.leader ,self.members])
 
     def leader_projects(self, user):
         if not project.exists():
@@ -126,8 +126,8 @@ class Project:
                 reader.remove(info[1])
             project_file.update(reader)
 
-    def add_duties(a, b):
-        a.duties.append(b)
+    def add_duties(self, b):
+        self.duties.append(b)
 
 
 class Duty:

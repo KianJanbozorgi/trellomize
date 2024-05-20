@@ -3,6 +3,7 @@ import re
 from util import File
 import bcrypt
 
+
 info_dir = Path("info")
 users = Path("info/users.csv")
 users_file = File("info/users.csv")
@@ -26,7 +27,7 @@ class User:
         self.username = ""
         self.password = ""
         self.account = "active"
-
+    
     def make_dir_or_file(self):
         if not info_dir.exists():
             info_dir.mkdir()
@@ -56,12 +57,12 @@ class User:
     def check_pass(self, entered_password, stored_password):
         return bcrypt.checkpw(entered_password.encode('utf-8'), stored_password.encode('utf-8'))
 
-    def sign_up(self):
-        self.email = input("-Please enter a valid email address: ")
+    def sign_up(self,email, password, username):
+        self.email = email
         self.check_email()
-        self.username = input("-Please enter a valid username: ")
+        self.username = username
         self.check_username()
-        self.password = input("-Please enter a strong password: ")
+        self.password = password
         self.check_password()
         self.make_dir_or_file()
         reader = users_file.read()
@@ -72,17 +73,17 @@ class User:
                 raise Exception("Duplicate username")
         users_file.append([self.email, self.username,
                           self.hash_password(self.password), self.account])
-        return self.username
+        return True
 
-    def log_in(self):
-        self.username = input("-Username: ")
-        self.password = input("-Password: ")
+    def log_in(self , username , password):
+        self.username = username
+        self.password = password
         self.make_dir_or_file()
         reader = users_file.read()
         for email, username, password, account in reader:
             if username == self.username and self.check_pass(self.password, password):
                 if account == "active":
-                    break
+                    return True
                 else:
                     raise Exception("Your account is deactive.")
         else:
