@@ -8,6 +8,7 @@ info_dir = Path("info")
 users = Path("info/users.csv")
 users_file = File("info/users.csv")
 project_file = File("info/project.csv")
+duty_file = File("info/duty.csv")
 
 
 Invalid_email = """Invalid email address.
