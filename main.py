@@ -105,7 +105,20 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.sign_in_button_fun)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun)
+        
+        self.window.add_widget(self.back)
         return self.window
+    def back_fun(self,instance):
+        self.build()
     def sign_in_button_fun(self,instance):
         user = User()
         if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text):
@@ -130,7 +143,20 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.log_in_button_fun)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun1)
+        
+        self.window.add_widget(self.back)
         return self.window
+    def back_fun1(self,instance):
+        self.build()
     def log_in_button_fun(self,instance):
         user = User()
         if user.log_in(username=self.user_name.text , password=self.user_password.text):
@@ -151,11 +177,107 @@ class SayHello(App):
                       size_hint= (1,0.5),
                       bold= True,
                       background_color ='#00FFCE')
+        self.edit_proj_button = Button(text= "edit projects",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
         
         self.window.add_widget(self.make_proj_button)
         self.window.add_widget(self.see_proj_button)
+        self.window.add_widget(self.edit_proj_button)
         self.make_proj_button.bind(on_press=self.make_proj_fun_link)
         self.see_proj_button.bind(on_press=self.see_proj_fun_link)
+        self.edit_proj_button.bind(on_press=self.edit_proj_fun_link)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun2)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun2(self,instance):
+        self.log_in("salam")
+    def edit_proj_fun_link(self,instance):
+        self.window.clear_widgets()
+        reader = project_file.read()
+        for Id , title , des , leader , member in reader:
+            if leader == self.user_name.text:
+                self.show = Label(
+                        text= f"""{Id , title , des ,member}""",
+                        font_size= 18,
+                        color= '#00FFCE'
+                        )
+                self.window.add_widget(self.show)
+        self.proj_id_conf = TextInput(hint_text="ID")
+        self.window.add_widget(self.proj_id_conf)
+        self.edit_members = Button(text= "edit members",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        self.delete_project = Button(text= "delete",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        
+        
+        self.window.add_widget(self.edit_members)
+        self.window.add_widget(self.delete_project)
+        self.edit_members.bind(on_press=self.edit_members_fun)
+        self.delete_project.bind(on_press=self.delete_project_fun)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun3)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun3(self,instance):
+        self.project_page(self.user_name.text)
+    def delete_project_fun(self,instance):
+        reader = project_file.read()
+        l = []
+        for row in reader:
+            if str(row[0]) != self.proj_id_conf.text:
+                l.append(row)
+        with open("info/project.csv","w",newline="") as f:
+            Writer=csv.writer(f)
+            Writer.writerows(l)
+        self.edit_proj_fun_link("salam")
+    def edit_members_fun(self,instance):
+        self.new_member = TextInput(hint_text="new members")
+        self.window.add_widget(self.new_member)
+        self.new_members_button = Button(text= "submit",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        
+        
+        self.window.add_widget(self.new_members_button)
+        self.new_members_button.bind(on_press=self.new_members_fun)
+    def new_members_fun(self,instance):
+        reader = project_file.read()
+        l = []
+        for row in reader:
+            if str(row[0]) == self.proj_id_conf.text:
+                save_list = list(row)
+            if str(row[0]) != self.proj_id_conf.text:
+                l.append(row)
+        with open("info/project.csv","w",newline="") as f:
+            Writer=csv.writer(f)
+            Writer.writerows(l)
+        prj = project.Project()
+        prj.create(id=save_list[0] , title=save_list[1],description=save_list[2],leader=save_list[3], members=self.new_member.text)
+        self.edit_proj_fun_link("salam")
     def see_proj_fun_link(self,instance):
         self.see_proj_fun(self.user_name)
     def see_proj_fun(self,user_name):
@@ -174,10 +296,25 @@ class SayHello(App):
         self.window.add_widget(self.see_member_button)
         self.see_leader_button.bind(on_press=self.see_leader_fun_link)
         self.see_member_button.bind(on_press=self.see_member_fun_link)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun3)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun3(self,instance):
+        self.project_page(self.user_name.text)
     def see_leader_fun_link(self,instance):
         self.see_leader_fun(self.user_name.text)
     def see_leader_fun(self,user_name):
         self.window.clear_widgets()
+        self.window.cols = 1
         reader = project_file.read()
         for Id , title , des , leader , member in reader:
             if leader == user_name:
@@ -197,6 +334,20 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.duty_page_link)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun8)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun8(self,instance):
+        self.see_proj_fun("salam")
     def duty_page_link(self , instance):
         self.duty_page(self.proj_id_conf.text)
     def duty_page(self,proj_id):
@@ -242,7 +393,8 @@ class SayHello(App):
         
         self.window.add_widget(self.make_duty_button)
         self.make_duty_button.bind(on_press=self.make_duty_link)
-        df = pd.read_csv("info/duty.csv") 
+        df = pd.read_csv("info/duty.csv")
+        df.sort_values(by=['Priority'] , inplace=True) 
         for i,proj in enumerate(list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
             if int(self.proj_id_conf.text) == int(proj):
@@ -286,6 +438,20 @@ class SayHello(App):
                 
                 self.window.add_widget(self.edit_duty_button)
                 self.edit_duty_button.bind(on_press=self.edit_duty_link)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun4)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun4(self,instance):
+        self.see_leader_fun(self.user_name.text)
     def comment_fun(self,instance):
         self.window.clear_widgets()
         self.window.cols = 1
@@ -312,6 +478,20 @@ class SayHello(App):
                       background_color ='#00FFCE')
         self.window.add_widget(self.new_comm_button)
         self.new_comm_button.bind(on_press=self.new_comm_fun)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun5)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun5(self,instance):
+        self.duty_page("salam")
     def new_comm_fun(self,instance):
         reader = duty_file.read()
         for row in reader:
@@ -384,6 +564,7 @@ class SayHello(App):
         self.see_member_fun(self.user_name.text)
     def see_member_fun(self,user_name):
         self.window.clear_widgets()
+        self.window.cols = 1
         reader = project_file.read()
         for Id , title , des , leader , member in reader:
             if user_name in member.split(','):
@@ -403,12 +584,28 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.duty_page_link1)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun8)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun8(self,instance):
+        self.see_proj_fun(self.user_name.text)
     def duty_page_link1(self , instance):
         self.duty_page1(self.proj_id_conf.text)
     def duty_page1(self,proj_id):
         self.window.clear_widgets()
         self.window.cols = 11
-        df = pd.read_csv("info/duty.csv") 
+        df = pd.read_csv("info/duty.csv")
+        df.sort_values(by=['Priority'] , inplace=True) 
+        print(df) 
         for i,proj in enumerate(list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
             if int(self.proj_id_conf.text) == int(proj):
@@ -452,6 +649,20 @@ class SayHello(App):
                 
                 self.window.add_widget(self.edit_duty_button)
                 self.edit_duty_button.bind(on_press=self.edit_duty_link1)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun6)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun6(self,instance):
+        self.see_member_fun(self.user_name.text)
     def comment_fun1(self,instance):
         self.window.clear_widgets()
         self.window.cols = 1
@@ -478,6 +689,20 @@ class SayHello(App):
                       background_color ='#00FFCE')
         self.window.add_widget(self.new_comm_button)
         self.new_comm_button.bind(on_press=self.new_comm_fun2)
+        self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+        self.back.bind(on_press=self.back_fun7)
+        
+        self.window.add_widget(self.back)
+        
+    def back_fun7(self,instance):
+        self.duty_page1("salam")
     def new_comm_fun2(self,instance):
         reader = duty_file.read()
         for row in reader:
@@ -568,6 +793,20 @@ class SayHello(App):
         
          self.window.add_widget(self.submit)
          self.submit.bind(on_press=self.new_proj_button_fun_linker)
+         self.back = Button(
+                      text= "back",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE',
+                      #remove darker overlay of background colour
+                      # background_normal = ""
+                      )
+         self.back.bind(on_press=self.back_fun3)
+        
+         self.window.add_widget(self.back)
+        
+    def back_fun3(self,instance):
+        self.project_page(self.user_name.text)
     def new_proj_button_fun_linker(self, instance):
         self.new_proj_button_fun(self.user_name.text)
     def new_proj_button_fun(self,user_name):

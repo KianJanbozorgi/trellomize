@@ -2,6 +2,7 @@ import random
 from menu import *
 from pathlib import Path
 from user import users_file, project_file ,duty_file
+from enum import Enum
 
 project = Path("info/project.csv")
 username = ""
@@ -129,7 +130,26 @@ class Project:
     def add_duties(self, duty):
         self.duties.append(duty)
 
+class Priority(Enum):
 
+        LOW = 1
+
+        MEDIUM = 2
+
+        HIGH = 3
+
+        CRITICAL = 4
+class Status(Enum):
+
+        BACKLOG = 1
+
+        TODO = 2
+
+        DOING = 3
+
+        DONE = 4
+
+        ARCHIVED = 5
 class Duty:
     def __init__(self,proj_id=None , members=None, title=None, description=None, priority=None,
                  history=[] ,status=None, start=None, end=None, comments=[],  ID=random.randint(1,7000)):
@@ -144,6 +164,7 @@ class Duty:
         self.proj_id = proj_id
         self.comments = comments
         self.history = history
+    
 
     def save(self):
         # duty_file.write(
