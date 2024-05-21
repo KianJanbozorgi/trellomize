@@ -132,7 +132,7 @@ class Project:
 
 class Duty:
     def __init__(self,proj_id=None , members=None, title=None, description=None, priority=None,
-                 status=None, start=None, end=None, comments=None, history=None , ID=random.randint(1,7000)):
+                 history=[] ,status=None, start=None, end=None, comments=None,  ID=random.randint(1,7000)):
         self.Id = ID
         self.members = members
         self.title = title
@@ -143,7 +143,7 @@ class Duty:
         self.end = end
         self.proj_id = proj_id
         self.comments = []
-        self.history = []
+        self.history = history
 
     def save(self):
         # duty_file.write(

@@ -6,13 +6,14 @@ import os
 from menu import *
 from user import *
 from kivy.app import App
+import datetime
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
-
+from kivy.uix.popup import Popup
 
 class SayHello(App):
     def build(self):
@@ -199,7 +200,48 @@ class SayHello(App):
     def duty_page_link(self , instance):
         self.duty_page(self.proj_id_conf.text)
     def duty_page(self,proj_id):
-
+        self.window.clear_widgets()
+        self.window.cols = 11
+        self.duty_name = TextInput(hint_text="name")
+        self.duty_id = TextInput(hint_text=f"""id""")
+        self.duty_des = TextInput(hint_text="des")
+        self.duty_start = TextInput(hint_text="start")
+        self.duty_end = TextInput(hint_text="end")
+        self.duty_members = TextInput(hint_text="members")
+        self.duty_priority = TextInput(hint_text="priority")
+        self.duty_status = TextInput(hint_text="status")
+        self.window.add_widget(self.duty_name)
+        self.window.add_widget(self.duty_id)
+        self.window.add_widget(self.duty_des)
+        self.window.add_widget(self.duty_start)
+        self.window.add_widget(self.duty_end)
+        self.window.add_widget(self.duty_members)
+        self.window.add_widget(self.duty_priority)
+        self.window.add_widget(self.duty_status)
+        self.history = Button(text= "history",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        
+        
+        self.window.add_widget(self.history)
+        # self.submit.bind(on_press=self.duty_page_link)
+        self.comment = Button(text= "comment",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        
+        
+        self.window.add_widget(self.comment)
+        # self.submit.bind(on_press=self.duty_page_link)
+        self.make_duty_button = Button(text= "make",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        
+        
+        self.window.add_widget(self.make_duty_button)
+        self.make_duty_button.bind(on_press=self.make_duty_link)
         df = pd.read_csv("info/duty.csv") 
         for i,proj in enumerate(list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
@@ -227,7 +269,7 @@ class SayHello(App):
                 
                 
                 self.window.add_widget(self.history)
-                # self.submit.bind(on_press=self.duty_page_link)
+                self.history.bind(on_press=self.history_fun)
                 self.comment = Button(text= "comment",
                             size_hint= (1,0.5),
                             bold= True,
@@ -244,13 +286,32 @@ class SayHello(App):
                 
                 self.window.add_widget(self.edit_duty_button)
                 self.edit_duty_button.bind(on_press=self.edit_duty_link)
+    def history_fun(self , instance):
+        reader = duty_file.read()
+        hist = []
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                hist = eval(row[10])
+        s = ""
+        for i in hist:
+            s += i + "\n"
+        popup = Popup(title='Test popup', content=Label(text=s),
+              auto_dismiss=True)
+        popup.open()
     def edit_duty_link(self,instance):
         self.edit_duty()
     def edit_duty(self):
-        
         df = pd.read_csv("info/duty.csv")
         df.drop_duplicates(subset=['ID'], keep='last',inplace=True)
         reader = duty_file.read()
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                history_list = eval(row[10])
+                if str(row[5]) != self.edit_duty_priority.text:
+                    history_list.append(f"""{self.user_name.text} has updated priority in {datetime.datetime.now()}""")
+                if str(row[6]) != self.edit_duty_status.text:
+                    history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
+                history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id.text:
@@ -259,11 +320,11 @@ class SayHello(App):
             Writer=csv.writer(f)
             Writer.writerows(l) 
         duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text)
+                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
+                            , history=history_list)
         duty.save()
         self.duty_page(self.proj_id_conf)
-        print()
-
+        print("are")
     def make_duty_link(self,instance):
         self.make_duty(self.proj_id_conf)
     def make_duty(self,proj_id):
@@ -286,7 +347,7 @@ class SayHello(App):
                         color= '#00FFCE'
                         )
                 self.window.add_widget(self.show)
-        self.proj_id_conf = TextInput(hint_text="ID")
+                self.proj_id_conf = TextInput(hint_text="ID")
         self.window.add_widget(self.proj_id_conf)
         self.submit = Button(text= "submit",
                       size_hint= (1,0.5),
@@ -295,10 +356,10 @@ class SayHello(App):
         
         
         self.window.add_widget(self.submit)
-        self.submit.bind(on_press=self.duty_page_link)
-    def duty_page_link(self , instance):
-        self.duty_page(self.proj_id_conf.text)
-    def duty_page(self,proj_id):
+        self.submit.bind(on_press=self.duty_page_link1)
+    def duty_page_link1(self , instance):
+        self.duty_page1(self.proj_id_conf.text)
+    def duty_page1(self,proj_id):
         self.window.clear_widgets()
         self.window.cols = 11
         df = pd.read_csv("info/duty.csv") 
@@ -328,7 +389,7 @@ class SayHello(App):
                 
                 
                 self.window.add_widget(self.history)
-                # self.submit.bind(on_press=self.duty_page_link)
+                self.history.bind(on_press=self.history_fun1)
                 self.comment = Button(text= "comment",
                             size_hint= (1,0.5),
                             bold= True,
@@ -344,17 +405,39 @@ class SayHello(App):
                 
                 
                 self.window.add_widget(self.edit_duty_button)
-                self.edit_duty_button.bind(on_press=self.edit_duty_link)
-    def edit_duty_link(self,instance):
+                self.edit_duty_button.bind(on_press=self.edit_duty_link1)
+    def history_fun1(self,instance):
+        reader = duty_file.read()
+        hist = []
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                hist = eval(row[10])
+        s = ""
+        for i in hist:
+            s += i + "\n"
+        popup = Popup(title='Test popup', content=Label(text=s),
+              auto_dismiss=True)
+        popup.open()
+    def edit_duty_link1(self,instance):
         if self.user_name.text in self.edit_duty_members.text.split(","):
-            self.edit_duty()
+            self.edit_duty1()
         else:
-            self.duty_page(self.proj_id_conf)
-    def edit_duty(self):
+            self.duty_page1(self.proj_id_conf)
+    def edit_duty1(self):
         
         df = pd.read_csv("info/duty.csv")
         df.drop_duplicates(subset=['ID'], keep='last',inplace=True)
         reader = duty_file.read()
+        reader = duty_file.read()
+        
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                history_list = eval(row[10])
+                if str(row[5]) != self.edit_duty_priority.text:
+                    history_list.append(f"""{self.user_name.text} has updated priority in {datetime.datetime.now()}""")
+                if str(row[6]) != self.edit_duty_status.text:
+                    history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
+                history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id.text:
@@ -363,19 +446,13 @@ class SayHello(App):
             Writer=csv.writer(f)
             Writer.writerows(l) 
         duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text)
+                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
+                            ,history=history_list)
         duty.save()
-        self.duty_page(self.proj_id_conf)
-        print()
+        self.duty_page1(self.proj_id_conf)
+        
 
-    def make_duty_link(self,instance):
-        self.make_duty(self.proj_id_conf)
-    def make_duty(self,proj_id):
-        duty = project.Duty(proj_id=proj_id.text,title=self.duty_name.text,description=self.duty_des.text ,priority=self.duty_priority.text,
-                            status=self.duty_status.text,start=self.duty_start.text,end=self.duty_end.text,members=self.duty_members.text)
-        duty.save()
-        self.duty_page(self.proj_id_conf)
-        print("are")
+    
     def make_proj_fun_link(self,instance):
         self.make_proj_fun(self.user_name.text)
     def make_proj_fun(self,user_name):
