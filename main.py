@@ -277,7 +277,7 @@ class SayHello(App):
                 
                 
                 self.window.add_widget(self.comment)
-                # self.submit.bind(on_press=self.duty_page_link)
+                self.comment.bind(on_press=self.comment_fun)
                 self.edit_duty_button = Button(text= "edit",
                             size_hint= (1,0.5),
                             bold= True,
@@ -286,6 +286,51 @@ class SayHello(App):
                 
                 self.window.add_widget(self.edit_duty_button)
                 self.edit_duty_button.bind(on_press=self.edit_duty_link)
+    def comment_fun(self,instance):
+        self.window.clear_widgets()
+        self.window.cols = 1
+        reader = duty_file.read()
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                s = ""
+                com_txt = eval(row[9])
+                for i in com_txt:
+                    s += i + "\n"
+                self.comments_text = Label(
+                        text=s ,
+                        font_size= 18,
+                        color= '#00FFCE'
+                        )
+                self.window.add_widget(self.comments_text)
+        self.new_comm = TextInput(hint_text="new comment")
+        self.window.add_widget(self.new_comm)
+        
+        
+        self.new_comm_button = Button(text= "new",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        self.window.add_widget(self.new_comm_button)
+        self.new_comm_button.bind(on_press=self.new_comm_fun)
+    def new_comm_fun(self,instance):
+        reader = duty_file.read()
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                comm_list = eval(row[9])
+                comm_list.append(str(datetime.datetime.now()) + "  " + self.user_name.text + " : " + self.new_comm.text)
+                history_list = eval(row[10])
+        l = []
+        for row in reader:
+            if row[1] != self.edit_duty_id.text:
+                l.append(row)
+        with open("info/duty.csv","w",newline="") as f:
+            Writer=csv.writer(f)
+            Writer.writerows(l) 
+        duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
+                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
+                            , history=history_list , comments=comm_list)
+        duty.save()
+        self.comment_fun("salam")
     def history_fun(self , instance):
         reader = duty_file.read()
         hist = []
@@ -312,6 +357,7 @@ class SayHello(App):
                 if str(row[6]) != self.edit_duty_status.text:
                     history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
                 history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
+                comm_list = eval(row[9])
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id.text:
@@ -321,7 +367,7 @@ class SayHello(App):
             Writer.writerows(l) 
         duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
                             status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
-                            , history=history_list)
+                            , history=history_list , comments=comm_list)
         duty.save()
         self.duty_page(self.proj_id_conf)
         print("are")
@@ -397,7 +443,7 @@ class SayHello(App):
                 
                 
                 self.window.add_widget(self.comment)
-                # self.submit.bind(on_press=self.duty_page_link)
+                self.comment.bind(on_press=self.comment_fun1)
                 self.edit_duty_button = Button(text= "edit",
                             size_hint= (1,0.5),
                             bold= True,
@@ -406,6 +452,51 @@ class SayHello(App):
                 
                 self.window.add_widget(self.edit_duty_button)
                 self.edit_duty_button.bind(on_press=self.edit_duty_link1)
+    def comment_fun1(self,instance):
+        self.window.clear_widgets()
+        self.window.cols = 1
+        reader = duty_file.read()
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                s = ""
+                com_txt = eval(row[9])
+                for i in com_txt:
+                    s += i + "\n"
+                self.comments_text = Label(
+                        text=s ,
+                        font_size= 18,
+                        color= '#00FFCE'
+                        )
+                self.window.add_widget(self.comments_text)
+        self.new_comm = TextInput(hint_text="new comment")
+        self.window.add_widget(self.new_comm)
+        
+        
+        self.new_comm_button = Button(text= "new",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        self.window.add_widget(self.new_comm_button)
+        self.new_comm_button.bind(on_press=self.new_comm_fun2)
+    def new_comm_fun2(self,instance):
+        reader = duty_file.read()
+        for row in reader:
+            if str(row[1]) == self.edit_duty_id.text:
+                comm_list = eval(row[9])
+                comm_list.append(str(datetime.datetime.now()) + "  " + self.user_name.text + " : " + self.new_comm.text)
+                history_list = eval(row[10])
+        l = []
+        for row in reader:
+            if row[1] != self.edit_duty_id.text:
+                l.append(row)
+        with open("info/duty.csv","w",newline="") as f:
+            Writer=csv.writer(f)
+            Writer.writerows(l) 
+        duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
+                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
+                            , history=history_list , comments=comm_list)
+        duty.save()
+        self.comment_fun1("salam")
     def history_fun1(self,instance):
         reader = duty_file.read()
         hist = []
