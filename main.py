@@ -20,6 +20,15 @@ from kivy.base import runTouchApp
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.app import runTouchApp
+import logging
+from kivy.config import Config
+
+
+
+
+logging.basicConfig(filename='app.log', encoding='utf-8', level=logging.INFO)
+
+
 
 class SayHello(App):
     def build(self):
@@ -92,6 +101,7 @@ class SayHello(App):
         user = User()
         if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 0:
             self.project_page(self.user_name.text)
+            logging.info(f"""signed in""")
         if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 1:
             self.window.add_widget(Label(text=Invalid_email))
         if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 2:
@@ -126,6 +136,7 @@ class SayHello(App):
         user = User()
         if user.log_in(username=self.user_name.text , password=self.user_password.text) == 0:
             self.project_page(self.user_name.text)
+            logging.info(f"""logged in""")
         elif user.log_in(username=self.user_name.text , password=self.user_password.text) == 1:
             self.window.add_widget(Label(text="your account is deactive"))
         elif user.log_in(username=self.user_name.text , password=self.user_password.text) == 2:
@@ -221,6 +232,7 @@ class SayHello(App):
         with open("info/project.csv","w",newline="") as f:
             Writer=csv.writer(f)
             Writer.writerows(l)
+        logging.info(f"""deleted project""")
         self.edit_proj_fun_link("salam")
     def edit_members_fun(self,instance):
         self.new_member = TextInput(hint_text="new members")
@@ -247,6 +259,7 @@ class SayHello(App):
         prj = project.Project()
         prj.create(id=save_list[0] , title=save_list[1],description=save_list[2],leader=save_list[3], members=self.new_member.text)
         self.edit_proj_fun_link("salam")
+        logging.info(f"""edited project members""")
     def see_proj_fun_link(self,instance):
         self.see_proj_fun(self.user_name)
     def see_proj_fun(self,user_name):
@@ -609,6 +622,7 @@ class SayHello(App):
                             status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
                             , history=history_list , comments=comm_list)
         duty.save()
+        logging.info(f"""added new comment""")
         self.comment_fun("salam")
     def history_fun(self , instance):
         reader = duty_file.read()
@@ -698,6 +712,7 @@ class SayHello(App):
                             status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
                             ,history=history_list)
         duty.save()
+        logging.info(f"""edited a duty""")
         self.duty_page(self.proj_id_conf)
     def make_duty_link(self,instance):
         self.make_duty(self.proj_id_conf)
@@ -705,8 +720,9 @@ class SayHello(App):
         duty = project.Duty(proj_id=proj_id.text,title=self.duty_name.text,description=self.duty_des.text ,priority=self.duty_priority.text,
                             status=self.duty_status.text,start=self.duty_start.text,end=self.duty_end.text,members=self.duty_members.text)
         duty.save()
+        logging.info(f"""made a duty""")
         self.duty_page(self.proj_id_conf)
-        print("are")
+        
 
     def see_member_fun_link(self,instance):
         self.see_member_fun(self.user_name.text)
@@ -1013,7 +1029,9 @@ class SayHello(App):
                             status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
                             , history=history_list , comments=comm_list)
         duty.save()
+        logging.info(f"""added a comment""")
         self.comment_fun1("salam")
+        
     def history_fun1(self,instance):
         reader = duty_file.read()
         hist = []
@@ -1110,6 +1128,7 @@ class SayHello(App):
                                 status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
                                 ,history=history_list)
             duty.save()
+            logging.info(f"""edited a duty""")
             self.duty_page1(self.proj_id_conf)
         else:
             self.window.add_widget(Label(text="you can not edit this duty\n you are not a member "))
@@ -1159,7 +1178,7 @@ class SayHello(App):
     def new_proj_button_fun(self,user_name):
         proj = project.Project()
         proj.create(id=self.proj_id.text , title=self.proj_title.text , description=self.proj_description.text , leader=user_name , members=self.proj_members.text)
-# run Say Hello App Calss
+        logging.info(f"""made a new project""")
+
 if __name__ == "__main__":
     SayHello().run()
-
