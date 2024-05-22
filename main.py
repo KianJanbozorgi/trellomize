@@ -14,6 +14,9 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
+from kivy.uix.dropdown import DropDown
+from kivy.uix.button import Button
+from kivy.base import runTouchApp
 
 class SayHello(App):
     def build(self):
@@ -352,7 +355,7 @@ class SayHello(App):
         self.duty_page(self.proj_id_conf.text)
     def duty_page(self,proj_id):
         self.window.clear_widgets()
-        self.window.cols = 11
+        self.window.cols = 13
         self.duty_name = TextInput(hint_text="name")
         self.duty_id = TextInput(hint_text=f"""id""")
         self.duty_des = TextInput(hint_text="des")
@@ -369,6 +372,8 @@ class SayHello(App):
         self.window.add_widget(self.duty_members)
         self.window.add_widget(self.duty_priority)
         self.window.add_widget(self.duty_status)
+        self.window.add_widget(Label(text=f"""form\n 1 to 4\n low\n medium\n high\n critical\n""",font_size=12))
+        self.window.add_widget(Label(text=f"""from\n 1 to 5\n \nbacklog \ntodo \nready \ndone \narchived""",font_size=12))
         self.history = Button(text= "history",
                       size_hint= (1,0.5),
                       bold= True,
@@ -404,8 +409,8 @@ class SayHello(App):
                 self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
                 self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
                 self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
-                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
-                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                self.edit_duty_priority = TextInput(text=f"""{int(df['Priority'][i])}""")
+                self.edit_duty_status = TextInput(text=f"""{int(df['Status'][i])}""")
                 self.window.add_widget(self.edit_duty_name)
                 self.window.add_widget(self.edit_duty_id)
                 self.window.add_widget(self.edit_duty_des)
@@ -414,6 +419,8 @@ class SayHello(App):
                 self.window.add_widget(self.edit_duty_members)
                 self.window.add_widget(self.edit_duty_priority)
                 self.window.add_widget(self.edit_duty_status)
+                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
                 self.history = Button(text= "history",
                             size_hint= (1,0.5),
                             bold= True,
@@ -602,7 +609,7 @@ class SayHello(App):
         self.duty_page1(self.proj_id_conf.text)
     def duty_page1(self,proj_id):
         self.window.clear_widgets()
-        self.window.cols = 11
+        self.window.cols = 13
         df = pd.read_csv("info/duty.csv")
         df.sort_values(by=['Priority'] , inplace=True) 
         print(df) 
@@ -615,8 +622,8 @@ class SayHello(App):
                 self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
                 self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
                 self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
-                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
-                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                self.edit_duty_priority = TextInput(text=f"""{int(df['Priority'][i])}""")
+                self.edit_duty_status = TextInput(text=f"""{int(df['Status'][i])}""")
                 self.window.add_widget(self.edit_duty_name)
                 self.window.add_widget(self.edit_duty_id)
                 self.window.add_widget(self.edit_duty_des)
@@ -625,6 +632,8 @@ class SayHello(App):
                 self.window.add_widget(self.edit_duty_members)
                 self.window.add_widget(self.edit_duty_priority)
                 self.window.add_widget(self.edit_duty_status)
+                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
                 self.history = Button(text= "history",
                             size_hint= (1,0.5),
                             bold= True,
