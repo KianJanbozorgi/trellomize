@@ -87,20 +87,7 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.sign_in_button_fun)
-        self.back = Button(
-                      text= "back",
-                      size_hint= (1,0.5),
-                      bold= True,
-                      background_color ='#00FFCE',
-                      #remove darker overlay of background colour
-                      # background_normal = ""
-                      )
-        self.back.bind(on_press=self.back_fun)
         
-        self.window.add_widget(self.back)
-        return self.window
-    def back_fun(self,instance):
-        self.build()
     def sign_in_button_fun(self,instance):
         user = User()
         if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text):
@@ -125,20 +112,7 @@ class SayHello(App):
         
         self.window.add_widget(self.submit)
         self.submit.bind(on_press=self.log_in_button_fun)
-        self.back = Button(
-                      text= "back",
-                      size_hint= (1,0.5),
-                      bold= True,
-                      background_color ='#00FFCE',
-                      #remove darker overlay of background colour
-                      # background_normal = ""
-                      )
-        self.back.bind(on_press=self.back_fun1)
         
-        self.window.add_widget(self.back)
-        return self.window
-    def back_fun1(self,instance):
-        self.build()
     def log_in_button_fun(self,instance):
         user = User()
         if user.log_in(username=self.user_name.text , password=self.user_password.text):
@@ -682,6 +656,14 @@ class SayHello(App):
                             background_color ='#00FFCE')
                 self.window.add_widget(self.duty_edit_second)
                 self.duty_edit_second.bind(on_press=self.edit_second_fun1)
+                self.back = Button(text= "back",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                self.window.add_widget(self.back)
+                self.back.bind(on_press=self.back_fun10)
+    def back_fun10(self,instance):
+        self.duty_page('salam')
     def edit_second_fun1(self,instance):
         reader = duty_file.read()
         for row in reader:
@@ -1085,28 +1067,39 @@ class SayHello(App):
                             background_color ='#00FFCE')
                 self.window.add_widget(self.duty_edit_second)
                 self.duty_edit_second.bind(on_press=self.edit_second_fun)
+                self.back = Button(text= "back",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                self.window.add_widget(self.back)
+                self.back.bind(on_press=self.back_fun10)
+    def back_fun10(self,instance):
+        self.duty_page1('salam')
     def edit_second_fun(self,instance):
-        reader = duty_file.read()
-        for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
-                history_list = eval(row[10])
-                if str(row[5]) != self.edit_duty_priority.text:
-                    history_list.append(f"""{self.user_name.text} has updated priority in {datetime.datetime.now()}""")
-                if str(row[6]) != self.edit_duty_status.text:
-                    history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
-                history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
-        l = []
-        for row in reader:
-            if row[1] != self.edit_duty_id.text:
-                l.append(row)
-        with open("info/duty.csv","w",newline="") as f:
-            Writer=csv.writer(f)
-            Writer.writerows(l) 
-        duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
-                            ,history=history_list)
-        duty.save()
-        self.duty_page1(self.proj_id_conf)
+        if self.user_name.text in self.edit_duty_members.text.split(","):
+            reader = duty_file.read()
+            for row in reader:
+                if str(row[1]) == self.edit_duty_id.text:
+                    history_list = eval(row[10])
+                    if str(row[5]) != self.edit_duty_priority.text:
+                        history_list.append(f"""{self.user_name.text} has updated priority in {datetime.datetime.now()}""")
+                    if str(row[6]) != self.edit_duty_status.text:
+                        history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
+                    history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
+            l = []
+            for row in reader:
+                if row[1] != self.edit_duty_id.text:
+                    l.append(row)
+            with open("info/duty.csv","w",newline="") as f:
+                Writer=csv.writer(f)
+                Writer.writerows(l) 
+            duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
+                                status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
+                                ,history=history_list)
+            duty.save()
+            self.duty_page1(self.proj_id_conf)
+        else:
+            self.window.add_widget(Label(text="you can not edit this duty\n you are not a member "))
         
 
     
