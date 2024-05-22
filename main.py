@@ -59,31 +59,7 @@ class SayHello(App):
         self.window.add_widget(self.button_sign)
 
         return self.window
-    # def build2(self):
-    #     layout = BoxLayout(orientation='vertical')
-
-    # # Project name input
-    #     self.project_name_input = TextInput(hint_text="Project Name")
-    #     layout.add_widget(self.project_name_input)
-
-    # # Project description input
-    #     self.project_description_input = TextInput(hint_text="Project Description", multiline=True)
-    #     layout.add_widget(self.project_description_input)
-
-    #     self.greeting = Label(
-    #                     text= f"""It worked""",
-    #                     font_size= 18,
-    #                     color= '#00FFCE'
-    #                     )
-    #     layout.add_widget(self.greeting)
-    # # Add project button
-    #     # self.add_project_button = Button(text="Add Project")
-    #     # self.add_project_button.bind(on_press=self.add_project)
-    #     # layout.add_widget(self.add_project_button)
-
-    # # (Optional) Project list display
-
-    #     return layout
+    
     def sign_in(self, instance):
         # change label text to "Hello + user name!"
         self.window.clear_widgets()  # Clear sign-in window
@@ -356,14 +332,14 @@ class SayHello(App):
     def duty_page(self,proj_id):
         self.window.clear_widgets()
         self.window.cols = 13
-        self.duty_name = TextInput(hint_text="name")
-        self.duty_id = TextInput(hint_text=f"""id""")
-        self.duty_des = TextInput(hint_text="des")
-        self.duty_start = TextInput(hint_text="start")
-        self.duty_end = TextInput(hint_text="end")
-        self.duty_members = TextInput(hint_text="members")
-        self.duty_priority = TextInput(hint_text="priority")
-        self.duty_status = TextInput(hint_text="status")
+        self.duty_name = TextInput(text=" no name")
+        self.duty_id = TextInput(text=f"""id""")
+        self.duty_des = TextInput(text="no data")
+        self.duty_start = TextInput(text=f"""{datetime.datetime.now()}""")
+        self.duty_end = TextInput(text=f"""{datetime.datetime.now() + datetime.timedelta(hours=24)}""")
+        self.duty_members = TextInput(text="")
+        self.duty_priority = TextInput(text="1")
+        self.duty_status = TextInput(text="1")
         self.window.add_widget(self.duty_name)
         self.window.add_widget(self.duty_id)
         self.window.add_widget(self.duty_des)
@@ -399,7 +375,8 @@ class SayHello(App):
         self.window.add_widget(self.make_duty_button)
         self.make_duty_button.bind(on_press=self.make_duty_link)
         df = pd.read_csv("info/duty.csv")
-        df.sort_values(by=['Priority'] , inplace=True) 
+        df.sort_values(by=['Priority'] , inplace=True)
+        print(df) 
         for i,proj in enumerate(list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
             if int(self.proj_id_conf.text) == int(proj):
@@ -409,8 +386,8 @@ class SayHello(App):
                 self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
                 self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
                 self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
-                self.edit_duty_priority = TextInput(text=f"""{int(df['Priority'][i])}""")
-                self.edit_duty_status = TextInput(text=f"""{int(df['Status'][i])}""")
+                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
                 self.window.add_widget(self.edit_duty_name)
                 self.window.add_widget(self.edit_duty_id)
                 self.window.add_widget(self.edit_duty_des)

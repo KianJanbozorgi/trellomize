@@ -3,6 +3,8 @@ from menu import *
 from pathlib import Path
 from user import users_file, project_file ,duty_file
 from enum import Enum
+import datetime
+import uuid
 
 project = Path("info/project.csv")
 username = ""
@@ -151,9 +153,10 @@ class Status(Enum):
 
         ARCHIVED = 5
 class Duty:
-    def __init__(self,proj_id=None , members=None, title=None, description=None, priority=None,
-                 history=[] ,status=None, start=None, end=None, comments=[],  ID=random.randint(1,7000)):
-        self.Id = ID
+    def __init__(self,proj_id=None , members=None, title="no title", description="no data", priority=1,
+                 history=[] ,status=1, start=str(datetime.datetime.now()), end=datetime.datetime.now() + datetime.timedelta(hours=24),
+                 comments=[],  ID=random.randint(1,7000)):
+        self.Id = uuid.uuid4()
         self.members = members
         self.title = title
         self.description = description
