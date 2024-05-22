@@ -155,8 +155,8 @@ class Status(Enum):
 class Duty:
     def __init__(self,proj_id=None , members=None, title="no title", description="no data", priority=1,
                  history=[] ,status=1, start=str(datetime.datetime.now()), end=datetime.datetime.now() + datetime.timedelta(hours=24),
-                 comments=[],  ID=random.randint(1,7000)):
-        self.Id = uuid.uuid4()
+                 comments=[],  ID=uuid.uuid4()):
+        self.Id = ID
         self.members = members
         self.title = title
         self.description = description

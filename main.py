@@ -17,6 +17,9 @@ from kivy.uix.popup import Popup
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
 from kivy.base import runTouchApp
+from kivy.uix.scrollview import ScrollView
+from kivy.core.window import Window
+from kivy.app import runTouchApp
 
 class SayHello(App):
     def build(self):
@@ -331,9 +334,10 @@ class SayHello(App):
         self.duty_page(self.proj_id_conf.text)
     def duty_page(self,proj_id):
         self.window.clear_widgets()
-        self.window.cols = 13
+        self.window.cols = 10
+        # root = ScrollView(size_hint=(1, None), size=(Window.width, Window.height))
+        # self.window.add_widget(root)
         self.duty_name = TextInput(text=" no name")
-        self.duty_id = TextInput(text=f"""id""")
         self.duty_des = TextInput(text="no data")
         self.duty_start = TextInput(text=f"""{datetime.datetime.now()}""")
         self.duty_end = TextInput(text=f"""{datetime.datetime.now() + datetime.timedelta(hours=24)}""")
@@ -341,7 +345,6 @@ class SayHello(App):
         self.duty_priority = TextInput(text="1")
         self.duty_status = TextInput(text="1")
         self.window.add_widget(self.duty_name)
-        self.window.add_widget(self.duty_id)
         self.window.add_widget(self.duty_des)
         self.window.add_widget(self.duty_start)
         self.window.add_widget(self.duty_end)
@@ -350,22 +353,7 @@ class SayHello(App):
         self.window.add_widget(self.duty_status)
         self.window.add_widget(Label(text=f"""form\n 1 to 4\n low\n medium\n high\n critical\n""",font_size=12))
         self.window.add_widget(Label(text=f"""from\n 1 to 5\n \nbacklog \ntodo \nready \ndone \narchived""",font_size=12))
-        self.history = Button(text= "history",
-                      size_hint= (1,0.5),
-                      bold= True,
-                      background_color ='#00FFCE')
-        
-        
-        self.window.add_widget(self.history)
-        # self.submit.bind(on_press=self.duty_page_link)
-        self.comment = Button(text= "comment",
-                      size_hint= (1,0.5),
-                      bold= True,
-                      background_color ='#00FFCE')
-        
-        
-        self.window.add_widget(self.comment)
-        # self.submit.bind(on_press=self.duty_page_link)
+
         self.make_duty_button = Button(text= "make",
                       size_hint= (1,0.5),
                       bold= True,
@@ -376,52 +364,184 @@ class SayHello(App):
         self.make_duty_button.bind(on_press=self.make_duty_link)
         df = pd.read_csv("info/duty.csv")
         df.sort_values(by=['Priority'] , inplace=True)
-        print(df) 
-        for i,proj in enumerate(list(df['Proj_Id'])):
+        print(df['Proj_Id'])
+        self.window.add_widget(Label(text=f"""BackLog"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
             if int(self.proj_id_conf.text) == int(proj):
-                self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
-                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
-                self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
-                self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
-                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
-                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
-                self.window.add_widget(self.edit_duty_name)
-                self.window.add_widget(self.edit_duty_id)
-                self.window.add_widget(self.edit_duty_des)
-                self.window.add_widget(self.edit_duty_start)
-                self.window.add_widget(self.edit_duty_end)
-                self.window.add_widget(self.edit_duty_members)
-                self.window.add_widget(self.edit_duty_priority)
-                self.window.add_widget(self.edit_duty_status)
-                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-                self.history = Button(text= "history",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
+                if int(df["Status"][i]) == 1: 
+                    self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                    self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                    self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                    self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                    self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                    self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                    self.window.add_widget(self.edit_duty_name)
+                    self.window.add_widget(self.edit_duty_id)
+                    self.window.add_widget(self.edit_duty_des)
+                    self.window.add_widget(self.edit_duty_start)
+                    self.window.add_widget(self.edit_duty_end)
+                    self.window.add_widget(self.edit_duty_members)
+                    self.window.add_widget(self.edit_duty_priority)
+                    self.window.add_widget(self.edit_duty_status)
+                    self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                    self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                    
+        self.window.add_widget(Label(text=f"""TODO"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            if int(self.proj_id_conf.text) == int(proj):
+                if int(df["Status"][i]) == 2: 
+                    self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                    self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                    self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                    self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                    self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                    self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                    self.window.add_widget(self.edit_duty_name)
+                    self.window.add_widget(self.edit_duty_id)
+                    self.window.add_widget(self.edit_duty_des)
+                    self.window.add_widget(self.edit_duty_start)
+                    self.window.add_widget(self.edit_duty_end)
+                    self.window.add_widget(self.edit_duty_members)
+                    self.window.add_widget(self.edit_duty_priority)
+                    self.window.add_widget(self.edit_duty_status)
+                    self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                    self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+
+
                 
-                
-                self.window.add_widget(self.history)
-                self.history.bind(on_press=self.history_fun)
-                self.comment = Button(text= "comment",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
-                
-                
-                self.window.add_widget(self.comment)
-                self.comment.bind(on_press=self.comment_fun)
-                self.edit_duty_button = Button(text= "edit",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
-                
-                
-                self.window.add_widget(self.edit_duty_button)
-                self.edit_duty_button.bind(on_press=self.edit_duty_link)
+        self.window.add_widget(Label(text=f"""DOING"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 3: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+
+
+                    
+        self.window.add_widget(Label(text=f"""DONE"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 4: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+
+
+        self.window.add_widget(Label(text=f"""Archived"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 5: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                        
+
         self.back = Button(
                       text= "back",
                       size_hint= (1,0.5),
@@ -430,10 +550,18 @@ class SayHello(App):
                       #remove darker overlay of background colour
                       # background_normal = ""
                       )
-        self.back.bind(on_press=self.back_fun4)
+        self.back.bind(on_press=self.back_fun6)
         
-        self.window.add_widget(self.back)
         
+        self.edit_duty_id_getter = TextInput(hint_text="ID")
+        self.edit_duty_button = Button(text= "edit",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        self.window.add_widget(self.edit_duty_id_getter)
+        self.window.add_widget(self.edit_duty_button)
+        self.edit_duty_button.bind(on_press=self.edit_duty)
+        self.window.add_widget(self.back)    
     def back_fun4(self,instance):
         self.see_leader_fun(self.user_name.text)
     def comment_fun(self,instance):
@@ -441,7 +569,7 @@ class SayHello(App):
         self.window.cols = 1
         reader = duty_file.read()
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 s = ""
                 com_txt = eval(row[9])
                 for i in com_txt:
@@ -479,13 +607,13 @@ class SayHello(App):
     def new_comm_fun(self,instance):
         reader = duty_file.read()
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 comm_list = eval(row[9])
                 comm_list.append(str(datetime.datetime.now()) + "  " + self.user_name.text + " : " + self.new_comm.text)
                 history_list = eval(row[10])
         l = []
         for row in reader:
-            if row[1] != self.edit_duty_id.text:
+            if row[1] != self.edit_duty_id_getter.text:
                 l.append(row)
         with open("info/duty.csv","w",newline="") as f:
             Writer=csv.writer(f)
@@ -499,7 +627,7 @@ class SayHello(App):
         reader = duty_file.read()
         hist = []
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 hist = eval(row[10])
         s = ""
         for i in hist:
@@ -507,34 +635,75 @@ class SayHello(App):
         popup = Popup(title='Test popup', content=Label(text=s),
               auto_dismiss=True)
         popup.open()
-    def edit_duty_link(self,instance):
-        self.edit_duty()
-    def edit_duty(self):
+    def edit_duty(self,id_changed):
+        self.window.clear_widgets()
+        self.window.cols = 1
+        reader = duty_file.read()
         df = pd.read_csv("info/duty.csv")
-        df.drop_duplicates(subset=['ID'], keep='last',inplace=True)
+        for i , ID in zip(list(df['ID'].index),list(df['ID'])):
+            if ID == self.edit_duty_id_getter.text:
+                self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                self.window.add_widget(self.edit_duty_name)
+                self.window.add_widget(self.edit_duty_id)
+                self.window.add_widget(self.edit_duty_des)
+                self.window.add_widget(self.edit_duty_start)
+                self.window.add_widget(self.edit_duty_end)
+                self.window.add_widget(self.edit_duty_members)
+                self.window.add_widget(self.edit_duty_priority)
+                self.window.add_widget(self.edit_duty_status)
+                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                self.history = Button(text= "history",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                                
+                                
+                self.window.add_widget(self.history)
+                self.history.bind(on_press=self.history_fun)
+                self.comment = Button(text= "comment",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                                
+                                
+                self.window.add_widget(self.comment)
+                self.comment.bind(on_press=self.comment_fun)
+                self.duty_edit_second = Button(text= "edit",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                self.window.add_widget(self.duty_edit_second)
+                self.duty_edit_second.bind(on_press=self.edit_second_fun1)
+    def edit_second_fun1(self,instance):
         reader = duty_file.read()
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 history_list = eval(row[10])
                 if str(row[5]) != self.edit_duty_priority.text:
                     history_list.append(f"""{self.user_name.text} has updated priority in {datetime.datetime.now()}""")
                 if str(row[6]) != self.edit_duty_status.text:
                     history_list.append(f"""{self.user_name.text} has updated status in {datetime.datetime.now()}""")
                 history_list.append(f"""{self.user_name.text} has updated duty in {datetime.datetime.now()}""")
-                comm_list = eval(row[9])
         l = []
         for row in reader:
-            if row[1] != self.edit_duty_id.text:
+            if row[1] != self.edit_duty_id_getter.text:
                 l.append(row)
         with open("info/duty.csv","w",newline="") as f:
             Writer=csv.writer(f)
             Writer.writerows(l) 
         duty = project.Duty(proj_id=self.proj_id_conf.text,title=self.edit_duty_name.text,description=self.edit_duty_des.text ,priority=self.edit_duty_priority.text,
                             status=self.edit_duty_status.text,start=self.edit_duty_start.text,end=self.edit_duty_end.text,members=self.edit_duty_members.text , ID=self.edit_duty_id.text
-                            , history=history_list , comments=comm_list)
+                            ,history=history_list)
         duty.save()
         self.duty_page(self.proj_id_conf)
-        print("are")
     def make_duty_link(self,instance):
         self.make_duty(self.proj_id_conf)
     def make_duty(self,proj_id):
@@ -586,55 +755,187 @@ class SayHello(App):
         self.duty_page1(self.proj_id_conf.text)
     def duty_page1(self,proj_id):
         self.window.clear_widgets()
-        self.window.cols = 13
+        self.window.cols = 10
         df = pd.read_csv("info/duty.csv")
-        df.sort_values(by=['Priority'] , inplace=True) 
-        print(df) 
-        for i,proj in enumerate(list(df['Proj_Id'])):
+        df.sort_values(by=['Priority'] , inplace=True)
+        print(df['Proj_Id'])
+        self.window.add_widget(Label(text=f"""BackLog"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
             print(proj , self.proj_id_conf.text)
             if int(self.proj_id_conf.text) == int(proj):
-                self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
-                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
-                self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
-                self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
-                self.edit_duty_priority = TextInput(text=f"""{int(df['Priority'][i])}""")
-                self.edit_duty_status = TextInput(text=f"""{int(df['Status'][i])}""")
-                self.window.add_widget(self.edit_duty_name)
-                self.window.add_widget(self.edit_duty_id)
-                self.window.add_widget(self.edit_duty_des)
-                self.window.add_widget(self.edit_duty_start)
-                self.window.add_widget(self.edit_duty_end)
-                self.window.add_widget(self.edit_duty_members)
-                self.window.add_widget(self.edit_duty_priority)
-                self.window.add_widget(self.edit_duty_status)
-                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-                self.history = Button(text= "history",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
+                if int(df["Status"][i]) == 1: 
+                    self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                    self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                    self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                    self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                    self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                    self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                    self.window.add_widget(self.edit_duty_name)
+                    self.window.add_widget(self.edit_duty_id)
+                    self.window.add_widget(self.edit_duty_des)
+                    self.window.add_widget(self.edit_duty_start)
+                    self.window.add_widget(self.edit_duty_end)
+                    self.window.add_widget(self.edit_duty_members)
+                    self.window.add_widget(self.edit_duty_priority)
+                    self.window.add_widget(self.edit_duty_status)
+                    self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                    self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                    
+        self.window.add_widget(Label(text=f"""TODO"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            if int(self.proj_id_conf.text) == int(proj):
+                if int(df["Status"][i]) == 2: 
+                    self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                    self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                    self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                    self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                    self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                    self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                    self.window.add_widget(self.edit_duty_name)
+                    self.window.add_widget(self.edit_duty_id)
+                    self.window.add_widget(self.edit_duty_des)
+                    self.window.add_widget(self.edit_duty_start)
+                    self.window.add_widget(self.edit_duty_end)
+                    self.window.add_widget(self.edit_duty_members)
+                    self.window.add_widget(self.edit_duty_priority)
+                    self.window.add_widget(self.edit_duty_status)
+                    self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                    self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                    
+
                 
-                
-                self.window.add_widget(self.history)
-                self.history.bind(on_press=self.history_fun1)
-                self.comment = Button(text= "comment",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
-                
-                
-                self.window.add_widget(self.comment)
-                self.comment.bind(on_press=self.comment_fun1)
-                self.edit_duty_button = Button(text= "edit",
-                            size_hint= (1,0.5),
-                            bold= True,
-                            background_color ='#00FFCE')
-                
-                
-                self.window.add_widget(self.edit_duty_button)
-                self.edit_duty_button.bind(on_press=self.edit_duty_link1)
+        self.window.add_widget(Label(text=f"""DOING"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 3: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                        
+
+                    
+        self.window.add_widget(Label(text=f"""DONE"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+            
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 4: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                        
+
+        self.window.add_widget(Label(text=f"""Archived"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+        self.window.add_widget(Label(text=f"""--------"""))
+
+
+        for i,proj in zip(list(df.index),list(df['Proj_Id'])):
+                if int(self.proj_id_conf.text) == int(proj):
+                    if int(df["Status"][i]) == 5: 
+                        self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                        self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                        self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                        self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                        self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                        self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                        self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                        self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                        self.window.add_widget(self.edit_duty_name)
+                        self.window.add_widget(self.edit_duty_id)
+                        self.window.add_widget(self.edit_duty_des)
+                        self.window.add_widget(self.edit_duty_start)
+                        self.window.add_widget(self.edit_duty_end)
+                        self.window.add_widget(self.edit_duty_members)
+                        self.window.add_widget(self.edit_duty_priority)
+                        self.window.add_widget(self.edit_duty_status)
+                        self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                        self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                        
+
         self.back = Button(
                       text= "back",
                       size_hint= (1,0.5),
@@ -645,16 +946,25 @@ class SayHello(App):
                       )
         self.back.bind(on_press=self.back_fun6)
         
-        self.window.add_widget(self.back)
         
+        self.edit_duty_id_getter = TextInput(hint_text="ID")
+        self.edit_duty_button = Button(text= "edit",
+                      size_hint= (1,0.5),
+                      bold= True,
+                      background_color ='#00FFCE')
+        self.window.add_widget(self.edit_duty_id_getter)
+        self.window.add_widget(self.edit_duty_button)
+        self.edit_duty_button.bind(on_press=self.edit_duty1)
+        self.window.add_widget(self.back)    
     def back_fun6(self,instance):
         self.see_member_fun(self.user_name.text)
+    
     def comment_fun1(self,instance):
         self.window.clear_widgets()
         self.window.cols = 1
         reader = duty_file.read()
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 s = ""
                 com_txt = eval(row[9])
                 for i in com_txt:
@@ -665,6 +975,7 @@ class SayHello(App):
                         color= '#00FFCE'
                         )
                 self.window.add_widget(self.comments_text)
+        
         self.new_comm = TextInput(hint_text="new comment")
         self.window.add_widget(self.new_comm)
         
@@ -692,7 +1003,7 @@ class SayHello(App):
     def new_comm_fun2(self,instance):
         reader = duty_file.read()
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if row[1] == self.edit_duty_id.text:
                 comm_list = eval(row[9])
                 comm_list.append(str(datetime.datetime.now()) + "  " + self.user_name.text + " : " + self.new_comm.text)
                 history_list = eval(row[10])
@@ -725,13 +1036,57 @@ class SayHello(App):
             self.edit_duty1()
         else:
             self.duty_page1(self.proj_id_conf)
-    def edit_duty1(self):
-        
+    def edit_duty1(self,id_changed):
+        self.window.clear_widgets()
+        self.window.cols = 1
+        reader = duty_file.read()
         df = pd.read_csv("info/duty.csv")
-        df.drop_duplicates(subset=['ID'], keep='last',inplace=True)
+        for i , ID in zip(list(df['ID'].index),list(df['ID'])):
+            if ID == self.edit_duty_id_getter.text:
+                self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
+                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                self.edit_duty_des = TextInput(text=f"""{df['Description'][i]}""")
+                self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
+                self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
+                self.edit_duty_members = TextInput(text=f"""{df['Members'][i]}""")
+                self.edit_duty_priority = TextInput(text=f"""{df['Priority'][i]}""")
+                self.edit_duty_status = TextInput(text=f"""{df['Status'][i]}""")
+                self.window.add_widget(self.edit_duty_name)
+                self.window.add_widget(self.edit_duty_id)
+                self.window.add_widget(self.edit_duty_des)
+                self.window.add_widget(self.edit_duty_start)
+                self.window.add_widget(self.edit_duty_end)
+                self.window.add_widget(self.edit_duty_members)
+                self.window.add_widget(self.edit_duty_priority)
+                self.window.add_widget(self.edit_duty_status)
+                self.window.add_widget(Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
+                self.window.add_widget(Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+                self.history = Button(text= "history",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                                
+                                
+                self.window.add_widget(self.history)
+                self.history.bind(on_press=self.history_fun)
+                self.comment = Button(text= "comment",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                                
+                                
+                self.window.add_widget(self.comment)
+                
+                self.comment.bind(on_press=self.comment_fun1)
+                
+                self.duty_edit_second = Button(text= "edit",
+                            size_hint= (1,0.5),
+                            bold= True,
+                            background_color ='#00FFCE')
+                self.window.add_widget(self.duty_edit_second)
+                self.duty_edit_second.bind(on_press=self.edit_second_fun)
+    def edit_second_fun(self,instance):
         reader = duty_file.read()
-        reader = duty_file.read()
-        
         for row in reader:
             if str(row[1]) == self.edit_duty_id.text:
                 history_list = eval(row[10])
