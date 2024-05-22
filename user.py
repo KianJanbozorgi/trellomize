@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 from util import File
 import bcrypt
-
+import main
 
 info_dir = Path("info")
 users = Path("info/users.csv")
@@ -38,17 +38,21 @@ class User:
     def check_email(self):
         pattern = r"^[a-zA-Z0-9_. +-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$"
         if not re.match(pattern, self.email):
-            raise ValueError(f"\n{Invalid_email}")
-
+            return True
+        else:
+            return False
     def check_username(self):
         pattern = r"[a-zA-Z0-9_.-]{4,16}$"
         if not re.match(pattern, self.username):
-            raise ValueError(f"\n{invalid_username}")
-
+           return True
+        else:
+            return False
     def check_password(self):
         pattern = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
         if not re.match(pattern, self.password):
-            raise ValueError(f"\n{invalid_password}")
+            return True
+        else:
+            return False
 
     def hash_password(self, password):
         salt = bcrypt.gensalt(rounds=12)
@@ -58,23 +62,30 @@ class User:
     def check_pass(self, entered_password, stored_password):
         return bcrypt.checkpw(entered_password.encode('utf-8'), stored_password.encode('utf-8'))
 
-    def sign_up(self,email, password, username):
+    def sign_up(self,email, password, username)->int:
         self.email = email
-        self.check_email()
         self.username = username
-        self.check_username()
         self.password = password
-        self.check_password()
         self.make_dir_or_file()
-        reader = users_file.read()
-        for email, username, password, account in reader:
-            if email == self.email:
-                raise Exception("Duplicate email")
-            if username == self.username:
-                raise Exception("Duplicate username")
-        users_file.append([self.email, self.username,
-                          self.hash_password(self.password), self.account])
-        return True
+        if  self.check_email():
+            return 1
+        
+        elif  self.check_username():
+            return 2
+        
+        elif  self.check_password():
+            return 3
+        else:
+            self.make_dir_or_file()
+            reader = users_file.read()
+            for email, username, password, account in reader:
+                if email == self.email:
+                    return 4
+                elif username == self.username:
+                    return 5    
+            users_file.append([self.email, self.username,
+                            self.hash_password(self.password), self.account])
+            return 0
 
     def log_in(self , username , password):
         self.username = username
@@ -84,12 +95,12 @@ class User:
         for email, username, password, account in reader:
             if username == self.username and self.check_pass(self.password, password):
                 if account == "active":
-                    return True
+                    return 0
                 else:
-                    raise Exception("Your account is deactive.")
+                    return 1
         else:
-            raise Exception("Wrong username or password.")
-        return self.username
+            return 2
+        
 
     def get_leader_projects(self):
         leader_projects = []

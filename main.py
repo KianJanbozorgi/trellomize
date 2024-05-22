@@ -90,9 +90,18 @@ class SayHello(App):
         
     def sign_in_button_fun(self,instance):
         user = User()
-        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text):
-             self.project_page(self.user_name.text)
-
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 0:
+            self.project_page(self.user_name.text)
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 1:
+            self.window.add_widget(Label(text=Invalid_email))
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 2:
+            self.window.add_widget(Label(text=invalid_username))
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 3:
+            self.window.add_widget(Label(text=invalid_password))
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 4:
+            self.window.add_widget(Label(text="this email is already in use"))
+        if user.sign_up(email=self.user_email.text , password=self.user_password.text , username=self.user_name.text) == 5:
+            self.window.add_widget(Label(text="this username is already in use"))
         
     def log_in(self, instance):
         self.window.clear_widgets()  # Clear sign-in window
@@ -115,8 +124,12 @@ class SayHello(App):
         
     def log_in_button_fun(self,instance):
         user = User()
-        if user.log_in(username=self.user_name.text , password=self.user_password.text):
+        if user.log_in(username=self.user_name.text , password=self.user_password.text) == 0:
             self.project_page(self.user_name.text)
+        elif user.log_in(username=self.user_name.text , password=self.user_password.text) == 1:
+            self.window.add_widget(Label(text="your account is deactive"))
+        elif user.log_in(username=self.user_name.text , password=self.user_password.text) == 2:
+            self.window.add_widget(Label(text="username or password is wrong"))
     def project_page(self , user_name):
         self.window.clear_widgets()
         self.greeting = Label(

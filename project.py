@@ -175,36 +175,4 @@ class Duty:
         duty_file.append(
             [self.proj_id,self.Id,self.members, self.title, self.description, self.priority ,self.status , self.start , self.end , self.comments , self.history])
         
-        # def add_history(username, n):
-        #     if n == 1:
-        #         comments.append((username, "changed the status"))
-        #     if n == 2:
-        #         comments.append((username, "changed the priority"))
-        #     if n == 3:
-        #         comments.append((username, "changed the start"))
-        #     if n == 4:
-        #         comments.append((username, "changed the end"))
 
-        # def change_status(a, username):
-        #     a = input("new status : ")
-        #     status = a
-        #     add_history(username, 1)
-
-        # def change_priority(a, username):
-        #     a = input("new priority : ")
-        #     priority = a
-        #     add_history(username, 2)
-
-        # def change_start(a, username):
-        #     a = input("new start : ")
-        #     start = a
-        #     add_history(username, 3)
-
-        # def change_end(a, username):
-        #     a = input("new start : ")
-        #     start = a
-        #     add_history(username, 4)
-
-        # def add_comment(a, username):
-        #     a = input("new comment : ")
-        #     comments.append((username, a))
