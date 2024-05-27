@@ -1,160 +1,153 @@
-import random
-from menu import *
 from pathlib import Path
-from user import users_file, project_file ,duty_file
+from user import users_file, projects_file, duty_file, projects
 from enum import Enum
 import datetime
 import uuid
-
-project = Path("info/project.csv")
-username = ""
 
 
 class Project:
     def __init__(self):
         self.duties = []
-        self.add_member = []
-        self.delete_member = []
-        self.delete_project = False
 
-    def create(self,id,title,description,leader,members):
+    def create(self, id, title, description, leader):
         self.Id = id
-        try:
-            self.check_id_unique()
-        except Exception as ex:
-            print(ex)
-        else:
-            self.title = title
-            self.Description = description
-            self.leader = leader
-            self.members = members
-            self.write_to_file()
+        if not self.check_id_unique():
+            raise ValueError("The selected id is not unique")
+        self.title = title
+        self.Description = description
+        self.leader = leader
+        self.write_to_file()
 
     def check_id_unique(self):
-        try:
-            reader = project_file.read()
-            for info in reader:
-                if info[1] == self.Id:
-                    raise Exception("The selected ID is not unique")
-        except FileNotFoundError:
-            pass
-
-    def project_menu(self, user):
-        menu = Menu(["Choose one of the following: ", "Create project", "View created projects(leader)",
-                     "View created projects(user)", "Back"])
-        menu.display()
-        if menu.selected_option == "Create project":
-            self.creat()
-        elif menu.selected_option == "View created projects(leader)":
-            project = self.leader_projects(user)
-            self.change_leader_projects(project)
-        elif menu.selected_option == "View created projects(user)":
-            project = self.user_projects(user)
+        if not projects.exists():
+            return True
+        reader = projects_file.read()
+        for info in reader:
+            if info[0] == self.Id:
+                return False
+        return True
 
     def write_to_file(self):
-        if not project.exists():
-            project_file.write(
-                [ "Id", "Title", "Description", "Leader" ,"Members"])
-        project_file.append(
-            [self.Id, self.title, self.Description, self.leader ,self.members])
+        if not projects.exists():
+            projects_file.write(
+                ["Id", "Title", "Description", "Leader", "Members"])
+        projects_file.append(
+            [self.Id, self.title, self.Description, self.leader])
 
     def leader_projects(self, user):
-        if not project.exists():
-            raise Exception("You have not created any projects yet")
-        projects = [f"{item[0]} (Id: {item[1]}, Title: {item[2]}, Description: {item[3]})"
+        if not projects.exists():
+            raise FileNotFoundError("Project file not found.")
+        projects = [f"(Id: {item[0]}, Title: {item[1]}, Description: {item[2]}, members: {"no body" if len(item) != 5 else item[4]})"
                     for item in user.get_leader_projects() if item[0] != "Name"]
         if not projects:
-            raise Exception("You have not created any projects yet")
-        menu = Menu(["projects:", *projects])
-        menu.display()
-        return menu.selected_option
+            raise ValueError("You have not created any projects yet")
+        return projects
 
     def user_projects(self, user):
-        if not project.exists():
-            raise Exception("You have not created any projects yet")
-        projects = [item[0]
-                    for item in user.get_user_projects() if item[0] != "Name"]
+        if not projects.exists():
+            raise FileNotFoundError("Project file not found.")
+        projects = [f"(Id: {item[0]}, Title: {item[1]}, Description: {item[2]})"
+                    for item in user.get_user_projects() if item[0] != "Id"]
         if not projects:
-            raise Exception("You have not created any projects yet")
-        menu = Menu(["projects:", *projects])
-        menu.display()
-        return menu.selected_option
+            raise ValueError("You are not a member of any projects.")
+        return projects
 
-    def leader_projects_menu(self):
-        menu = Menu(["what do you want to do?", "Add member", "Delete member",
-                     "Delete project", "Back"])
-        menu.display()
-        console.clear()
+    def find(self, id):
+        projects = projects_file.read()
+        for info in enumerate(projects):
+            if id == info[1][0]:
+                return info
+
+    def input_members_func(self, input_username):
+        return [name for name in input_username.split(",")]
+
+    def add_member_func(self, input_username, id):
+        input_members = self.input_members_func(input_username)
+
         reader = users_file.read()
-        if menu.selected_option == "Add member":
-            members_username = input(
-                "Enter the username of members that you want to add to the project: ").split()
-            for username in members_username:
-                for info in reader:
-                    if info[1] == username:
-                        self.add_member.append(username)
-                        break
-        elif menu.selected_option == "Delete member":
-            members_username = input(
-                "Enter the username of members that you want to delete from the project: ").split()
-            for username in members_username:
-                for info in reader:
-                    if info[1] == username:
-                        self.delete_member.append(username)
-                        break
-        elif menu.selected_option == "Delete project":
-            self.delete = True
+        valid_members = [info[1] for info in reader]
 
-    def change_leader_projects(self, choice):
-        reader = project_file.read()
-        console.clear()
-        self.leader_projects_menu()
-        counter = 1
-        for info in enumerate(reader):
-            if choice[choice.find(":") + 2: choice.find(",")] == info[1][1] and self.add_member:
-                for username in self.add_member:
-                    if username not in [username for username in info[1][4:]]:
-                        info[1].append(username)
-                        reader[0].append(f"Member{counter}")
-                        counter += 1
-                index, new_info = info
-                reader[index] = [*new_info]
-            elif choice[choice.find(":") + 2: choice.find(",")] == info[1][1] and self.delete_member:
-                for username in self.delete_member:
-                    if username in info[1][5:]:
-                        info[1].remove(username)
-                index, new_info = info
-                reader[index] = [*new_info]
-            elif choice[choice.find(":") + 2: choice.find(",")] == info[1][1] and self.delete:
-                reader.remove(info[1])
-            project_file.update(reader)
+        add_member = [
+            username for username in input_members if username in valid_members]
+
+        projects = projects_file.read()
+        project_index, project = self.find(id)
+
+        current_members = []
+        if len(project) > 4:
+            current_members = [member for member in project[4].split(",")]
+
+        new_members = [
+            username for username in add_member if username not in current_members]
+
+        all_members = current_members + new_members
+
+        if len(project) == 4:
+            project.append(",".join(all_members))
+
+        else:
+            project[4] = ",".join(all_members)
+
+        projects[project_index] = project
+        projects_file.update(projects)
+
+    def delete_member_func(self, input_username, id):
+        input_members = self.input_members_func(input_username)
+
+        projects = projects_file.read()
+        project_index, project = self.find(id)
+
+        current_members = []
+        if len(project) > 4:
+            current_members = [member for member in project[4].split(",")]
+
+        delete_members = [
+            member for member in input_members if member in current_members]
+
+        new_current_members = [
+            member for member in current_members if member not in delete_members]
+        project[4] = ",".join(new_current_members)
+        projects[project_index] = project
+        projects_file.update(projects)
+
+    def delete_project(self, id):
+        reader = projects_file.read()
+        for project in reader:
+            if str(project[0]) == id:
+                reader.remove(project)
+        projects_file.update(reader)
 
     def add_duties(self, duty):
         self.duties.append(duty)
 
+
 class Priority(Enum):
 
-        LOW = 1
+    LOW = 1
 
-        MEDIUM = 2
+    MEDIUM = 2
 
-        HIGH = 3
+    HIGH = 3
 
-        CRITICAL = 4
+    CRITICAL = 4
+
+
 class Status(Enum):
 
-        BACKLOG = 1
+    BACKLOG = 1
 
-        TODO = 2
+    TODO = 2
 
-        DOING = 3
+    DOING = 3
 
-        DONE = 4
+    DONE = 4
 
-        ARCHIVED = 5
+    ARCHIVED = 5
+
+
 class Duty:
-    def __init__(self,proj_id=None , members=None, title="no title", description="no data", priority=1,
-                 history=[] ,status=1, start=str(datetime.datetime.now()), end=datetime.datetime.now() + datetime.timedelta(hours=24),
+    def __init__(self, proj_id=None, members=None, title="no title", description="no data", priority=1,
+                 history=[], status=1, start=str(datetime.datetime.now()), end=datetime.datetime.now() + datetime.timedelta(hours=24),
                  comments=[],  ID=uuid.uuid4()):
         self.Id = ID
         self.members = members
@@ -167,12 +160,7 @@ class Duty:
         self.proj_id = proj_id
         self.comments = comments
         self.history = history
-    
 
     def save(self):
-        # duty_file.write(
-        #     ["Proj_Id" , "ID", "Members","Title", "Description", "Priority" ,"Status" , "Start" , "End" , "Comments" , "History"])
         duty_file.append(
-            [self.proj_id,self.Id,self.members, self.title, self.description, self.priority ,self.status , self.start , self.end , self.comments , self.history])
-        
-
+            [self.proj_id, self.Id, self.members, self.title, self.description, self.priority, self.status, self.start, self.end, self.comments, self.history])
