@@ -2,16 +2,18 @@ from pathlib import Path
 import re
 from util import File
 import bcrypt
-import main
 
 info_dir = Path("info")
 users = Path("info/users.csv")
-users_file = File("info/users.csv")
-project_file = File("info/project.csv")
+projects = Path("info/projects.csv")
+manager = Path("manager.csv")
+users_file = File(users)
+projects_file = File(projects)
 duty_file = File("info/duty.csv")
+manager_file = File(manager)
 
 
-Invalid_email = """Invalid email address.
+invalid_email = """Invalid email address.
 """
 invalid_username = """A valid username can include letters(uppercase and lowercase), numbers, '_', '.', '-'.
 It should also have between 4 and 16 characters.
@@ -28,7 +30,7 @@ class User:
         self.username = ""
         self.password = ""
         self.account = "active"
-    
+
     def make_dir_or_file(self):
         if not info_dir.exists():
             info_dir.mkdir()
@@ -36,23 +38,16 @@ class User:
             users_file.write(["email", "username", "password", "account"])
 
     def check_email(self):
-        pattern = r"^[a-zA-Z0-9_. +-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$"
-        if not re.match(pattern, self.email):
-            return True
-        else:
-            return False
+        pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        return not re.match(pattern, self.email)
+
     def check_username(self):
         pattern = r"[a-zA-Z0-9_.-]{4,16}$"
-        if not re.match(pattern, self.username):
-           return True
-        else:
-            return False
+        return not re.match(pattern, self.username)
+
     def check_password(self):
         pattern = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
-        if not re.match(pattern, self.password):
-            return True
-        else:
-            return False
+        return not re.match(pattern, self.password)
 
     def hash_password(self, password):
         salt = bcrypt.gensalt(rounds=12)
@@ -62,59 +57,98 @@ class User:
     def check_pass(self, entered_password, stored_password):
         return bcrypt.checkpw(entered_password.encode('utf-8'), stored_password.encode('utf-8'))
 
-    def sign_up(self,email, password, username)->int:
+    def sign_up(self, email, password, username):
         self.email = email
         self.username = username
         self.password = password
         self.make_dir_or_file()
-        if  self.check_email():
-            return 1
-        
-        elif  self.check_username():
-            return 2
-        
-        elif  self.check_password():
-            return 3
-        else:
-            self.make_dir_or_file()
-            reader = users_file.read()
-            for email, username, password, account in reader:
-                if email == self.email:
-                    return 4
-                elif username == self.username:
-                    return 5    
-            users_file.append([self.email, self.username,
-                            self.hash_password(self.password), self.account])
-            return 0
+        if self.check_email():
+            raise ValueError(invalid_email)
 
-    def log_in(self , username , password):
+        elif self.check_username():
+            raise ValueError(invalid_username)
+
+        elif self.check_password():
+            raise ValueError(invalid_password)
+
+        reader = users_file.read()
+        for email, username, password, account in reader:
+            if email == self.email:
+                raise ValueError("This email is already in use.")
+            elif username == self.username:
+                raise ValueError("This username is already in use.")
+        users_file.append([self.email, self.username,
+                          self.hash_password(self.password), self.account])
+        return "NO exception"
+
+    def log_in(self, username, password):
         self.username = username
         self.password = password
+        if self.is_manager():
+            return
         self.make_dir_or_file()
         reader = users_file.read()
         for email, username, password, account in reader:
             if username == self.username and self.check_pass(self.password, password):
                 if account == "active":
-                    return 0
+                    return "No exception"
                 else:
-                    return 1
+                    raise PermissionError("Your account is deactive.")
+        raise ValueError("Username or password is wrong.")
+
+    def is_manager(self):
+        if manager.exists():
+            reader = manager_file.read()
+            if reader[1][0] == self.username and self.check_pass(self.password, reader[1][1]):
+                return True
+        return False
+
+    def deactive_account(self, username):
+        reader = users_file.read()
+        for index, info in enumerate(reader):
+            if info[1] == username:
+                if info[3] == "active":
+                    info[3] = "deactive"
+                    reader[index] = [*info]
+                    break
+                else:
+                    raise ValueError("User account is currently deactive.")
         else:
-            return 2
-        
+            raise ValueError("There is no such username.")
+
+        users_file.update(reader)
+
+    def active_account(self, username):
+        reader = users_file.read()
+        for index, info in enumerate(reader):
+            if info[1] == username:
+                if info[3] == "deactive":
+                    info[3] = "active"
+                    reader[index] = [*info]
+                    break
+                else:
+                    raise ValueError("User's account is currently active.")
+        else:
+            raise ValueError("There is no such username.")
+
+        users_file.update(reader)
 
     def get_leader_projects(self):
         leader_projects = []
-        reader = project_file.read()
+        reader = projects_file.read()
         for info in reader:
-            if self.username == info[4]:
+            if self.username == info[3]:
                 leader_projects.append(info)
         return leader_projects
 
     def get_user_projects(self):
         user_projects = []
-        reader = project_file.read()
+        reader = projects_file.read()
         for info in reader:
-            for member in info[5:]:
-                if self.username == member:
-                    user_projects.append(info)
+            if (len(info) > 4):
+                for member in [username for username in info[4].split(",")]:
+                    if self.username == member:
+                        user_projects.append(info)
+            else:
+                continue
         return user_projects
