@@ -11,10 +11,10 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-import logging
+from loguru import logger
 
 
-logging.basicConfig(filename='app.log', encoding='utf-8', level=logging.INFO)
+logger.add("app.log", format="{time}{message}", level="INFO")
 
 
 class SayHello(App):
@@ -87,7 +87,7 @@ class SayHello(App):
             self.user.sign_up(email=self.user_email.text,
                               password=self.user_password.text, username=self.username.text)
             self.is_manager("")
-            logging.info(f"{self.username.text} signed in")
+            logger.info(f"{self.username.text} signed in")
             # Clear any previous error message
             self.invalid_input.text = ""
         except ValueError as ex:
@@ -126,7 +126,7 @@ class SayHello(App):
             self.user.log_in(username=self.username.text,
                              password=self.user_password.text)
             self.is_manager("")
-            logging.info(f"{self.username.text} logged in")
+            logger.info(f"{self.username.text} logged in")
             # Clear any previous error message
             self.invalid_input.text = ""
         except (ValueError, PermissionError) as ex:
@@ -290,7 +290,7 @@ class SayHello(App):
         try:
             self.proj.create(id=self.proj_id.text, title=self.proj_title.text,
                              description=self.proj_description.text, leader=self.username.text)
-            logging.info(f"{self.username.text} made a new project")
+            logger.info(f"{self.username.text} made a new project")
             # Clear any previous error message
             self.invalid_input.text = ""
 
@@ -423,7 +423,7 @@ class SayHello(App):
     def delete_project_fun(self, instance: Widget) -> None:
         """Delete a project."""
         self.proj.delete_project(self.proj_id_conf.text)
-        logging.info(f"""deleted project""")
+        logger.info(f"""deleted project""")
         self.see_proj_fun("")
 
     def edit_members_fun(self, instance: Widget) -> None:
@@ -482,7 +482,7 @@ class SayHello(App):
         """Add new members to the project."""
         self.proj.add_member_func(self.add_member.text, self.proj_id_conf.text)
         self.edit_proj_fun("")
-        logging.info(f"""{self.username.text} edited project members""")
+        logger.info(f"""{self.username.text} edited project members""")
 
     def delete_member_func(self, instance: Widget) -> None:
         """Display form to delete members."""
@@ -517,7 +517,7 @@ class SayHello(App):
         self.proj.delete_member_func(
             self.delete_member.text, self.proj_id_conf.text)
         self.edit_proj_fun("")
-        logging.info(f"""{self.username.text} edited project members""")
+        logger.info(f"""{self.username.text} edited project members""")
 
     def duty_page(self, instance: Widget) -> None:
         """Display duty page with duties categorized by status."""
@@ -798,7 +798,7 @@ class SayHello(App):
         duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
                             status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list, comments=comm_list)
         duty.save()
-        logging.info(f"""added new comment""")
+        logger.info(f"""added new comment""")
         self.comment_fun("")
 
     def history_fun(self, instance: Widget) -> None:
@@ -895,7 +895,7 @@ class SayHello(App):
         duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
                             status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list)
         duty.save()
-        logging.info(f"""edited a duty""")
+        logger.info(f"""edited a duty""")
         self.duty_page(self.proj_id_conf)
 
     def make_duty_link(self, instance: Widget) -> None:
@@ -905,7 +905,7 @@ class SayHello(App):
         duty = project.Duty(proj_id=proj_id.text, title=self.duty_name.text, description=self.duty_des.text, priority=self.duty_priority.text,
                             status=self.duty_status.text, start=self.duty_start.text, end=self.duty_end.text, members=self.duty_members.text)
         duty.save()
-        logging.info(f"""made a duty""")
+        logger.info(f"""made a duty""")
         self.duty_page(self.proj_id_conf)
 
     def duty_page_link1(self, instance: Widget) -> None:
@@ -1161,7 +1161,7 @@ class SayHello(App):
         duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
                             status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list, comments=comm_list)
         duty.save()
-        logging.info(f"""added a comment""")
+        logger.info(f"""added a comment""")
         self.comment_fun1("")
 
     def history_fun1(self, instance: Widget) -> None:
@@ -1267,7 +1267,7 @@ class SayHello(App):
             duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
                                 status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list)
             duty.save()
-            logging.info(f"""edited a duty""")
+            logger.info(f"""edited a duty""")
             self.duty_page1(self.proj_id_conf)
         else:
             self.window.add_widget(
