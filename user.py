@@ -18,15 +18,12 @@ duty_file = File(duty)
 manager_file = File(manager)
 
 # Error messages for invalid email, username, and password formats
-invalid_email = """Invalid email address.
-"""
+invalid_email = """Invalid email address."""
 invalid_username = """A valid username can include letters(uppercase and lowercase), numbers, '_', '.', '-'.
-It should also have between 4 and 16 characters.
-"""
+It should also have between 4 and 16 characters."""
 invalid_password = """weak password.
 A strong password includes at least one uppercase letter,one lowercase letter,one number
-and one special character. It should also contain at least 8 characters.
-"""
+and one special character. It should also contain at least 8 characters."""
 
 
 class User:
@@ -78,13 +75,13 @@ class User:
         self.password = password
         self.make_dir_or_file()
         if self.check_email():
-            raise ValueError("Invalid email address.")
+            raise ValueError(invalid_email)
 
         elif self.check_username():
-            raise ValueError("Invalid username.")
+            raise ValueError(invalid_username)
 
         elif self.check_password():
-            raise ValueError("Weak password.")
+            raise ValueError(invalid_password)
 
         reader = users_file.read()
         for email, username, password, account in reader:
@@ -156,7 +153,7 @@ class User:
         """Get projects led by the user."""
         leader_projects = []
         reader = projects_file.read()
-        for info in reader:
+        for info in reader[1:]:
             if self.username == info[3]:
                 leader_projects.append(info)
         return leader_projects
@@ -165,7 +162,7 @@ class User:
         """Get projects where the user is a member."""
         user_projects = []
         reader = projects_file.read()
-        for info in reader:
+        for info in reader[1:]:
             if len(info) > 4:
                 for member in [username for username in info[4].split(",")]:
                     if self.username == member:

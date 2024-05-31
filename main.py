@@ -1,9 +1,9 @@
 import pandas as pd
+from datetime import datetime, timedelta
+from loguru import logger
 import project
-import csv
 from user import *
 from kivy.app import App
-import datetime
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -11,10 +11,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from loguru import logger
+from kivy.uix.boxlayout import BoxLayout
 
-
-logger.add("app.log", format="{time}{message}", level="INFO")
+logger.add("app.log", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
 
 
 class SayHello(App):
@@ -51,10 +50,10 @@ class SayHello(App):
         self.window.add_widget(self.button_log)
 
         # Bind button press events to corresponding methods
-        self.button_sign.bind(on_press=self.sign_in)
+        self.button_sign.bind(on_press=self.sign_up)
         self.button_log.bind(on_press=self.log_in)
 
-    def sign_in(self, instance: Widget) -> None:
+    def sign_up(self, instance: Widget) -> None:
         """Display the sign-up page."""
         self.window.clear_widgets()
 
@@ -78,21 +77,22 @@ class SayHello(App):
         self.window.add_widget(self.invalid_input)
 
         # Bind button press events to corresponding methods
-        self.submit.bind(on_press=self.sign_in_button_fun)
+        self.submit.bind(on_press=self.sign_up_button_fun)
         self.back.bind(on_press=self.first_page)
 
-    def sign_in_button_fun(self, instance: Widget) -> None:
+    def sign_up_button_fun(self, instance: Widget) -> None:
         """Handle the sign-up form submission."""
         try:
             self.user.sign_up(email=self.user_email.text,
                               password=self.user_password.text, username=self.username.text)
             self.is_manager("")
-            logger.info(f"{self.username.text} signed in")
+            logger.info(f"{self.username.text} signed up.")
             # Clear any previous error message
             self.invalid_input.text = ""
         except ValueError as ex:
             # Display the error message if sign-up fails
             self.invalid_input.text = str(ex)
+            logger.error(f"Sign up failed for {self.username.text}.")
 
     def log_in(self, instance: Widget) -> None:
         """Display the log-in page."""
@@ -126,12 +126,13 @@ class SayHello(App):
             self.user.log_in(username=self.username.text,
                              password=self.user_password.text)
             self.is_manager("")
-            logger.info(f"{self.username.text} logged in")
+            logger.info(f"{self.username.text} logged in.")
             # Clear any previous error message
             self.invalid_input.text = ""
         except (ValueError, PermissionError) as ex:
             # Display the error message if log-in fails
             self.invalid_input.text = str(ex)
+            logger.error(f"log in failed for {self.username.text}.")
 
     def is_manager(self, instance: Widget) -> None:
         """Display options based on whether the user is a manager."""
@@ -210,6 +211,7 @@ class SayHello(App):
         self.window.add_widget(self.active_member_account)
         self.window.add_widget(self.submit)
         self.window.add_widget(self.back)
+        self.invalid_input.text = ""
         self.window.add_widget(self.invalid_input)
 
         # Bind button press events to corresponding methods
@@ -220,12 +222,13 @@ class SayHello(App):
         """Handle account activation."""
         try:
             self.user.active_account(self.active_member_account.text)
-
+            logger.info(f"{self.username.text} activated {self.active_member_account.text}'s account.")
             # Clear any previous error message
             self.invalid_input.text = ""
         except ValueError as ex:
             # Display the error message if activation fails
             self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text} could not activate {self.active_member_account.text}'s account.")
 
     def deactive_accont_page_func(self, instance: Widget) -> None:
         """Display the deactivate account page."""
@@ -242,6 +245,7 @@ class SayHello(App):
         self.window.add_widget(self.deactive_member_account)
         self.window.add_widget(self.submit)
         self.window.add_widget(self.back)
+        self.invalid_input.text = ""
         self.window.add_widget(self.invalid_input)
 
         # Bind button press events to corresponding methods
@@ -250,13 +254,16 @@ class SayHello(App):
 
     def deactive_account_func(self, instance: Widget) -> None:
         """Handle account deactivation."""
+        self.invalid_input.text = ""
         try:
             self.user.deactive_account(self.deactive_member_account.text)
-            # Clear any previous error messag
+            logger.info(f"{self.username.text} deactivated {self.deactive_member_account.text}'s account.")
+            # Clear any previous error message
             self.invalid_input.text = ""
         except ValueError as ex:
             # Display the error message if deactivation fails
             self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text} could not deactivate {self.deactive_member_account.text}'s account.")
 
     def make_proj_fun(self, instance: Widget) -> None:
         """Display the create project page."""
@@ -290,13 +297,14 @@ class SayHello(App):
         try:
             self.proj.create(id=self.proj_id.text, title=self.proj_title.text,
                              description=self.proj_description.text, leader=self.username.text)
-            logger.info(f"{self.username.text} made a new project")
+            logger.info(f"{self.username.text} made a new project with {self.proj_title.text} title.")
             # Clear any previous error message
             self.invalid_input.text = ""
 
         except ValueError as ex:
             # Display the error message if project creation fails
             self.invalid_input.text = str(ex)
+            logger.error(f"Project creation failed by {self.username.text} because a duplicate ID was selected.")
 
     def see_proj_fun(self, instance: Widget) -> None:
         """Display the list of projects."""
@@ -327,30 +335,40 @@ class SayHello(App):
         try:
             projects = self.proj.leader_projects(self.user)
             self.window.clear_widgets()
-            # Add label for projets info, TextInput field for project ID, Submit button and Back button
+            # Add label for projects info, TextInput field for project ID, Submit button and Back button
             for project in projects:
                 self.show = Label(text=project, font_size=20, color='#00FFCE')
                 self.window.add_widget(self.show)
+            
             self.proj_id_conf = TextInput(hint_text="ID")
-            self.submit = Button(text="submit", font_size=20, size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
-            self.back = Button(text="back", font_size=20, size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
+            self.submit = Button(text="submit", font_size=20, size_hint=(1, 0.5), bold=True, background_color='#00FFCE')
+            self.back = Button(text="back", font_size=20, size_hint=(1, 0.5), bold=True, background_color='#00FFCE')
 
             # Add widgets to the window
             self.window.add_widget(self.proj_id_conf)
             self.window.add_widget(self.submit)
             self.window.add_widget(self.back)
+            self.invalid_input.text = ""
+            self.window.add_widget(self.invalid_input)
 
             # Bind button press events to corresponding methods
-            self.submit.bind(on_press=self.edit_proj_fun)
+            self.submit.bind(on_press=self.on_submit_leader)
             self.back.bind(on_press=self.see_proj_fun)
 
-            # Clear any previous error message
-            self.invalid_input.text = ""
+            logger.info(f"{self.username.text} tried to see the projects in which are a leader.")
+
         except (FileNotFoundError, ValueError) as ex:
             # Display the error message if an error occurs
             self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
+
+    def on_submit_leader(self, instance):
+        try:
+            self.proj.check_id(self.proj_id_conf.text, self.proj.leader_projects(self.user))
+            self.edit_proj_fun("")
+        except ValueError as ex:
+            self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
 
     def see_member_fun(self, instance: Widget) -> None:
         """Display projects where the user is a member and provide options to manage duties."""
@@ -365,65 +383,67 @@ class SayHello(App):
                 self.window.add_widget(self.show)
 
             # Add TextInput field for project ID, Submit button, and Back button
-            self.proj_id_conf = TextInput(hint_text="ID")
-            self.submit = Button(text="submit", font_size=20, size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
-            self.back = Button(text="back", font_size=20, size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
+            self.proj_id_conf = TextInput(hint_text="id")
+            self.submit = Button(text="submit", font_size=20, size_hint=(1, 0.5), bold=True, background_color='#00FFCE')
+            self.back = Button(text="back", font_size=20, size_hint=(1, 0.5), bold=True, background_color='#00FFCE')
 
             # Add widgets to the window
             self.window.add_widget(self.proj_id_conf)
             self.window.add_widget(self.submit)
             self.window.add_widget(self.back)
+            self.invalid_input.text = ""
+            self.window.add_widget(self.invalid_input)
 
             # Bind button press events to corresponding methods
-            self.submit.bind(on_press=self.duty_page_link1)
+            self.submit.bind(on_press=self.on_submit_member)
             self.back.bind(on_press=self.see_proj_fun)
 
-            # Clear any previous error message
-            self.invalid_input.text = ""
+            logger.info(f"{self.username.text} tried to see the projects in which are a member.")
+
         except (FileNotFoundError, ValueError) as ex:
             # Display the error message if an error occurs
             self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
+
+    def on_submit_member(self, instance):
+        try:
+            self.proj.check_id(self.proj_id_conf.text, self.proj.user_projects(self.user))
+            self.duty_page1("")
+        except ValueError as ex:
+            self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
 
     def edit_proj_fun(self, instance: Widget) -> None:
         """Display options to edit a project."""
         self.window.cols = 1
-        try:
-            self.window.clear_widgets()
+        self.window.clear_widgets()
 
-            # Create buttons for managing tasks, editing members, deleting project, and going back
-            self.tasks = Button(text="Tasks", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
-            self.edit_members = Button(text="edit members", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
-            self.delete_project = Button(text="delete", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
-            self.back = Button(text="back", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
+        # Create buttons for managing tasks, editing members, deleting project, and going back
+        self.tasks = Button(text="Tasks", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
+        self.edit_members = Button(text="edit members", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
+        self.delete_project = Button(text="delete", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
+        self.back = Button(text="back", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE', font_size=20)
 
-            # Add buttons to the window
-            self.window.add_widget(self.tasks)
-            self.window.add_widget(self.edit_members)
-            self.window.add_widget(self.delete_project)
-            self.window.add_widget(self.back)
+        # Add buttons to the window
+        self.window.add_widget(self.tasks)
+        self.window.add_widget(self.edit_members)
+        self.window.add_widget(self.delete_project)
+        self.window.add_widget(self.back)
 
-            # Bind button press events to corresponding methods
-            self.tasks.bind(on_press=self.duty_page)
-            self.edit_members.bind(on_press=self.edit_members_fun)
-            self.delete_project.bind(on_press=self.delete_project_fun)
-            self.back.bind(on_press=self.see_leader_fun)
-
-            # Clear any previous error message
-            self.invalid_input.text = ""
-        except ValueError as ex:
-            # Display the error message if an error occurs
-            self.invalid_input.text = str(ex)
+        # Bind button press events to corresponding methods
+        self.tasks.bind(on_press=self.duty_page)
+        self.edit_members.bind(on_press=self.edit_members_fun)
+        self.delete_project.bind(on_press=self.delete_project_fun)
+        self.back.bind(on_press=self.see_leader_fun)
 
     def delete_project_fun(self, instance: Widget) -> None:
         """Delete a project."""
-        self.proj.delete_project(self.proj_id_conf.text)
-        logger.info(f"""deleted project""")
+        project_title = self.proj.delete_project(self.proj_id_conf.text)
+        logger.info(f"""{self.username.text} deleted project with {project_title} title.""")
         self.see_proj_fun("")
 
     def edit_members_fun(self, instance: Widget) -> None:
@@ -452,37 +472,36 @@ class SayHello(App):
 
     def add_member_func(self, instance: Widget) -> None:
         """Display form to add new members."""
-        try:
-            self.window.clear_widgets()
+        self.window.clear_widgets()
 
-            # Create TextInput field for adding members, Submit button, and Back button
-            self.add_member = TextInput(hint_text="members")
-            self.add_member_submit_button = Button(text="Submit", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
-            self.add_member_back_button = Button(text="Back", size_hint=(
-                1, 0.5), bold=True, background_color='#00FFCE')
+        # Create TextInput field for adding members, Submit button, and Back button
+        self.add_member = TextInput(hint_text="member")
+        self.add_member_submit_button = Button(text="Submit", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE')
+        self.add_member_back_button = Button(text="Back", size_hint=(
+            1, 0.5), bold=True, background_color='#00FFCE')
 
-            # Add buttons to the window
-            self.window.add_widget(self.add_member)
-            self.window.add_widget(self.add_member_submit_button)
-            self.window.add_widget(self.add_member_back_button)
+        # Add buttons to the window
+        self.window.add_widget(self.add_member)
+        self.window.add_widget(self.add_member_submit_button)
+        self.window.add_widget(self.add_member_back_button)
+        self.invalid_input.text = ""
+        self.window.add_widget(self.invalid_input)
 
-            # Bind button press events to corresponding methods
-            self.add_member_submit_button.bind(on_press=self.add_members_func)
-            self.add_member_back_button.bind(on_press=self.edit_members_fun)
-
-            # Clear any previous error message
-            self.invalid_input.text = ""
-
-        except ValueError as ex:
-            # Display the error message if an error occurs
-            self.invalid_input.text = str(ex)
+        # Bind button press events to corresponding methods
+        self.add_member_submit_button.bind(on_press=self.add_members_func)
+        self.add_member_back_button.bind(on_press=self.edit_members_fun)
 
     def add_members_func(self, instance: Widget) -> None:
-        """Add new members to the project."""
-        self.proj.add_member_func(self.add_member.text, self.proj_id_conf.text)
-        self.edit_proj_fun("")
-        logger.info(f"""{self.username.text} edited project members""")
+        """Add new member to the project."""
+        try:
+            self.proj.add_member_func(self.add_member.text, self.proj_id_conf.text)
+            self.edit_proj_fun("")
+            logger.info(f"{self.username.text} added {self.add_member.text} to the project.")
+        except ValueError as ex:
+            self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
+
 
     def delete_member_func(self, instance: Widget) -> None:
         """Display form to delete members."""
@@ -490,7 +509,7 @@ class SayHello(App):
             self.window.clear_widgets()
 
             # Create TextInput field for deleting members, Submit button, and Back button
-            self.delete_member = TextInput(hint_text="members")
+            self.delete_member = TextInput(hint_text="member")
             self.delete_member_submit_button = Button(
                 text="Submit", size_hint=(1, 0.5), bold=True, background_color='#00FFCE')
             self.delete_member_back_button = Button(
@@ -500,37 +519,77 @@ class SayHello(App):
             self.window.add_widget(self.delete_member)
             self.window.add_widget(self.delete_member_submit_button)
             self.window.add_widget(self.delete_member_back_button)
+            self.invalid_input.text = ""
+            self.window.add_widget(self.invalid_input)
 
             # Bind button press events to corresponding methods
             self.delete_member_submit_button.bind(
                 on_press=self.delete_members_func)
             self.delete_member_back_button.bind(on_press=self.edit_members_fun)
 
-            # Clear any previous error message
-            self.invalid_input.text = ""
         except ValueError as ex:
             # Display the error message if an error occurs
             self.invalid_input.text = str(ex)
 
     def delete_members_func(self, instance: Widget) -> None:
         """Delete members from the project."""
-        self.proj.delete_member_func(
-            self.delete_member.text, self.proj_id_conf.text)
-        self.edit_proj_fun("")
-        logger.info(f"""{self.username.text} edited project members""")
+        try:
+            self.proj.delete_member_func(
+                self.delete_member.text, self.proj_id_conf.text)
+            self.edit_proj_fun("")
+            logger.info(f"{self.username.text} deleted {self.delete_member.text} from the project.")
+        except ValueError as ex:
+            self.invalid_input.text = str(ex)
+            logger.error(f"{self.username.text}: {ex}")
 
     def duty_page(self, instance: Widget) -> None:
         """Display duty page with duties categorized by status."""
         self.window.clear_widgets()
         self.window.cols = 10
-        self.duty_name = TextInput(text=" no name")
-        self.duty_des = TextInput(text="no data")
-        self.duty_start = TextInput(text=f"""{datetime.datetime.now()}""")
+
+        self.initialize_widgets()
+        self.add_new_duty_form()
+        self.display_duties()
+
+        self.back = Button(
+            text="back",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#00FFCE',
+        )
+        self.back.bind(on_press=self.edit_proj_fun)
+        self.edit_duty_id_getter = TextInput(hint_text="ID")
+        self.edit_duty_button = Button(
+            text="edit",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#00FFCE'
+        )
+        self.edit_duty_button.bind(on_press=self.edit_duty)
+
+        self.window.add_widget(self.edit_duty_id_getter)
+        self.window.add_widget(self.edit_duty_button)
+        self.window.add_widget(self.back)
+
+    def initialize_widgets(self):
+        """Initialize widgets for the duty page."""
+        self.duty_name = TextInput(hint_text="name")
+        self.duty_des = TextInput(hint_text="description")
+        self.duty_start = TextInput(text=f"{datetime.now()}")
         self.duty_end = TextInput(
-            text=f"""{datetime.datetime.now() + datetime.timedelta(hours=24)}""")
-        self.duty_members = TextInput(text="")
+            text=f"{datetime.now() + timedelta(hours=24)}")
+        self.duty_members = TextInput(hint_text="members")
         self.duty_priority = TextInput(text="1")
         self.duty_status = TextInput(text="1")
+        self.make_duty_button = Button(
+            text="make",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#00FFCE'
+        )
+
+    def add_new_duty_form(self):
+        """Add form for creating a new duty."""
         self.window.add_widget(self.duty_name)
         self.window.add_widget(self.duty_des)
         self.window.add_widget(self.duty_start)
@@ -539,211 +598,52 @@ class SayHello(App):
         self.window.add_widget(self.duty_priority)
         self.window.add_widget(self.duty_status)
         self.window.add_widget(Label(
-            text=f"""form\n 1 to 4\n low\n medium\n high\n critical\n""", font_size=12))
+            text="from\n1 to 4\n low\n medium\n high\n critical\n", font_size=12))
         self.window.add_widget(Label(
-            text=f"""from\n 1 to 5\n \nbacklog \ntodo \nready \ndone \narchived""", font_size=12))
-
-        self.make_duty_button = Button(text="make",
-                                       size_hint=(1, 0.5),
-                                       bold=True,
-                                       background_color='#00FFCE')
-
+            text="from\n1 to 5 \nbacklog \ntodo \ndoing \ndone \narchived", font_size=12))
         self.window.add_widget(self.make_duty_button)
-        self.make_duty_button.bind(on_press=self.make_duty_link)
+        self.make_duty_button.bind(on_press=self.make_duty)
 
+    def display_duties(self):
+        """Display duties categorized by status."""
         df = pd.read_csv("info/duty.csv")
         df.sort_values(by=['Priority'], inplace=True)
-        print(df['Proj_Id'])
-        self.window.add_widget(Label(text=f"""BackLog"""))
+
+        for status in project.Status:
+            self.create_header(status.name)
+            for i, proj in zip(list(df.index), list(df['Project_id'])):
+                if int(self.proj_id_conf.text) == int(proj) and int(df["Status"][i]) == status.value:
+                    self.add_duty_widgets(i, df)
+
+    def create_header(self, category: str):
+        """Create headers for different duty categories."""
+        self.window.add_widget(Label(text=category))
         for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
+            self.window.add_widget(Label(text="--------"))
 
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            print(proj, self.proj_id_conf.text)
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 1:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+    def add_duty_widgets(self, index: int, df: pd.DataFrame):
+        """Add widgets for individual duties."""
+        self.edit_duty_name = TextInput(text=f"{df['Title'][index]}")
+        self.edit_duty_id = TextInput(text=f"{df['Task_id'][index]}")
+        self.edit_duty_des = TextInput(text=f"{df['Description'][index]}")
+        self.edit_duty_start = TextInput(text=f"{df['Start'][index]}")
+        self.edit_duty_end = TextInput(text=f"{df['End'][index]}")
+        self.edit_duty_members = TextInput(text=f"{df['Members'][index]}")
+        self.edit_duty_priority = TextInput(text=f"{df['Priority'][index]}")
+        self.edit_duty_status = TextInput(text=f"{df['Status'][index]}")
 
-        self.window.add_widget(Label(text=f"""TODO"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 2:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.window.add_widget(Label(text=f"""DOING"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 3:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.window.add_widget(Label(text=f"""DONE"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 4:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.window.add_widget(Label(text=f"""Archived"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 5:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.back = Button(
-            text="back",
-            size_hint=(1, 0.5),
-            bold=True,
-            background_color='#00FFCE',
-        )
-
-        self.back.bind(on_press=self.edit_proj_fun)
-
-        self.edit_duty_id_getter = TextInput(hint_text="ID")
-        self.edit_duty_button = Button(text="edit",
-                                       size_hint=(1, 0.5),
-                                       bold=True,
-                                       background_color='#00FFCE')
-        self.window.add_widget(self.edit_duty_id_getter)
-        self.window.add_widget(self.edit_duty_button)
-        self.edit_duty_button.bind(on_press=self.edit_duty)
-        self.window.add_widget(self.back)
+        self.window.add_widget(self.edit_duty_name)
+        self.window.add_widget(self.edit_duty_id)
+        self.window.add_widget(self.edit_duty_des)
+        self.window.add_widget(self.edit_duty_start)
+        self.window.add_widget(self.edit_duty_end)
+        self.window.add_widget(self.edit_duty_members)
+        self.window.add_widget(self.edit_duty_priority)
+        self.window.add_widget(self.edit_duty_status)
+        self.window.add_widget(
+            Label(text=f"{project.Priority(int(df['Priority'][index])).name}"))
+        self.window.add_widget(
+            Label(text=f"{project.Status(int(df['Status'][index])).name}"))
 
     def comment_fun(self, instance: Widget) -> None:
         self.window.clear_widgets()
@@ -757,14 +657,13 @@ class SayHello(App):
                     s += i + "\n"
                 self.comments_text = Label(
                     text=s,
-                    font_size=18,
+                    font_size=20,
                     color='#00FFCE'
                 )
                 self.window.add_widget(self.comments_text)
         self.new_comm = TextInput(hint_text="new comment")
         self.window.add_widget(self.new_comm)
-
-        self.new_comm_button = Button(text="new",
+        self.new_comm_button = Button(text="submit",
                                       size_hint=(1, 0.5),
                                       bold=True,
                                       background_color='#00FFCE')
@@ -776,32 +675,33 @@ class SayHello(App):
             bold=True,
             background_color='#00FFCE',
         )
+        self.window.add_widget(self.back)
         self.back.bind(on_press=self.duty_page)
 
-        self.window.add_widget(self.back)
-
     def new_comm_fun(self, instance: Widget) -> None:
+        """Adds a new comment to a duty and updates its history."""
         reader = duty_file.read()
+        comm_list = []
+        history_list = []
         for row in reader:
             if str(row[1]) == self.edit_duty_id_getter.text:
                 comm_list = eval(row[9])
-                comm_list.append(str(datetime.datetime.now()) + "  " +
+                comm_list.append(str(datetime.now()) + "  " +
                                  self.username.text + " : " + self.new_comm.text)
                 history_list = eval(row[10])
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id_getter.text:
                 l.append(row)
-        with open("info/duty.csv", "w", newline="") as f:
-            Writer = csv.writer(f)
-            Writer.writerows(l)
-        duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list, comments=comm_list)
+        duty_file.update(l)
+        duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text,
+                            priority=self.edit_duty_priority.text,status=self.edit_duty_status.text, start=self.edit_duty_start.text,
+                            end=self.edit_duty_end.text, members=self.edit_duty_members.text, history=history_list, comments=comm_list)
         duty.save()
-        logger.info(f"""added new comment""")
-        self.comment_fun("")
+        logger.info(f"{self.username.text} added new comment")
 
     def history_fun(self, instance: Widget) -> None:
+        """Displays the history of a duty in a popup window."""
         reader = duty_file.read()
         hist = []
         for row in reader:
@@ -810,19 +710,25 @@ class SayHello(App):
         s = ""
         for i in hist:
             s += i + "\n"
-        popup = Popup(title='Test popup', content=Label(text=s),
-                      auto_dismiss=True)
+
+        close_button = Button(text='Close', size_hint=(1, 0.2))
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text=s))
+        content.add_widget(close_button)
+
+        popup = Popup(title='Test popup', content=content, auto_dismiss=False)
+        close_button.bind(on_press=popup.dismiss)
         popup.open()
 
-    def edit_duty(self, id_changed):
+    def edit_duty(self, instance: Widget) -> None:
+        """Displays duty details for editing."""
         self.window.clear_widgets()
         self.window.cols = 1
-        reader = duty_file.read()
         df = pd.read_csv("info/duty.csv")
-        for i, ID in zip(list(df['ID'].index), list(df['ID'])):
+        for i, ID in zip(list(df['Task_id'].index), list(df['Task_id'])):
             if ID == self.edit_duty_id_getter.text:
                 self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
-                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                self.edit_duty_id = TextInput(text=f"""{df['Task_id'][i]}""")
                 self.edit_duty_des = TextInput(
                     text=f"""{df['Description'][i]}""")
                 self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
@@ -873,241 +779,106 @@ class SayHello(App):
                 self.back.bind(on_press=self.duty_page)
 
     def edit_second_fun1(self, instance: Widget) -> None:
+        """Updates duty details upon editing and saves changes."""
         reader = duty_file.read()
         for row in reader:
             if str(row[1]) == self.edit_duty_id_getter.text:
                 history_list = eval(row[10])
                 if str(row[5]) != self.edit_duty_priority.text:
                     history_list.append(f"""{self.username.text} has updated priority in {
-                                        datetime.datetime.now()}""")
+                                        datetime.now()}""")
                 if str(row[6]) != self.edit_duty_status.text:
                     history_list.append(f"""{self.username.text} has updated status in {
-                                        datetime.datetime.now()}""")
+                                        datetime.now()}""")
                 history_list.append(f"""{self.username.text} has updated duty in {
-                                    datetime.datetime.now()}""")
+                                    datetime.now()}""")
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id_getter.text:
                 l.append(row)
-        with open("info/duty.csv", "w", newline="") as f:
-            Writer = csv.writer(f)
-            Writer.writerows(l)
+        duty_file.update(l)
         duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list)
+                            status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, history=history_list)
         duty.save()
-        logger.info(f"""edited a duty""")
-        self.duty_page(self.proj_id_conf)
+        logger.info(f"{self.username.text} edited a duty")
+        self.duty_page("")
 
-    def make_duty_link(self, instance: Widget) -> None:
-        self.make_duty(self.proj_id_conf)
-
-    def make_duty(self, proj_id):
-        duty = project.Duty(proj_id=proj_id.text, title=self.duty_name.text, description=self.duty_des.text, priority=self.duty_priority.text,
+    def make_duty(self, instance: Widget) -> None:
+        """Creates a new duty and logs the action."""
+        duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.duty_name.text, description=self.duty_des.text, priority=self.duty_priority.text,
                             status=self.duty_status.text, start=self.duty_start.text, end=self.duty_end.text, members=self.duty_members.text)
         duty.save()
-        logger.info(f"""made a duty""")
-        self.duty_page(self.proj_id_conf)
+        logger.info(f"""{self.username.text} made a duty""")
+        self.duty_page("")
 
-    def duty_page_link1(self, instance: Widget) -> None:
-        self.duty_page1(self.proj_id_conf.text)
-
-    def duty_page1(self, proj_id):
+    def duty_page1(self, instance: Widget) -> None:
+        """Display the duties categorized by status with an option to edit them."""
         self.window.clear_widgets()
         self.window.cols = 10
         df = pd.read_csv("info/duty.csv")
         df.sort_values(by=['Priority'], inplace=True)
-        print(df['Proj_Id'])
-        self.window.add_widget(Label(text=f"""BackLog"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
 
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            print(proj, self.proj_id_conf.text)
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 1:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+        for status in project.Status:
+            self.display_category(df, status)
 
-        self.window.add_widget(Label(text=f"""TODO"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
+        self.setup_edit_interface()
 
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 2:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
+    def display_category(self, df: pd.DataFrame, status: project.Status) -> None:
+        """Display duties under a specific category."""
+        self.create_header(status.name)
+        for i, proj in zip(list(df.index), list(df['Project_id'])):
+            if int(self.proj_id_conf.text) == int(proj) and int(df["Status"][i]) == status.value:
+                self.add_duty_widgets(i, df)
 
-        self.window.add_widget(Label(text=f"""DOING"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
+    def add_duty_widgets(self, index: int, df: pd.DataFrame) -> None:
+        """Add widgets for individual duties."""
+        self.edit_duty_name = TextInput(text=f"{df['Title'][index]}")
+        self.edit_duty_id = TextInput(text=f"{df['Task_id'][index]}")
+        self.edit_duty_des = TextInput(text=f"{df['Description'][index]}")
+        self.edit_duty_start = TextInput(text=f"{df['Start'][index]}")
+        self.edit_duty_end = TextInput(text=f"{df['End'][index]}")
+        self.edit_duty_members = TextInput(text=f"{df['Members'][index]}")
+        self.edit_duty_priority = TextInput(text=f"{df['Priority'][index]}")
+        self.edit_duty_status = TextInput(text=f"{df['Status'][index]}")
 
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
+        self.window.add_widget(self.edit_duty_name)
+        self.window.add_widget(self.edit_duty_id)
+        self.window.add_widget(self.edit_duty_des)
+        self.window.add_widget(self.edit_duty_start)
+        self.window.add_widget(self.edit_duty_end)
+        self.window.add_widget(self.edit_duty_members)
+        self.window.add_widget(self.edit_duty_priority)
+        self.window.add_widget(self.edit_duty_status)
+        self.window.add_widget(
+            Label(text=f"{project.Priority(int(df['Priority'][index])).name}"))
+        self.window.add_widget(
+            Label(text=f"{project.Status(int(df['Status'][index])).name}"))
 
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 3:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.window.add_widget(Label(text=f"""DONE"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 4:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.window.add_widget(Label(text=f"""Archived"""))
-        for _ in range(9):
-            self.window.add_widget(Label(text=f"""--------"""))
-
-        for i, proj in zip(list(df.index), list(df['Proj_Id'])):
-            if int(self.proj_id_conf.text) == int(proj):
-                if int(df["Status"][i]) == 5:
-                    self.edit_duty_name = TextInput(
-                        text=f"""{df['Title'][i]}""")
-                    self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
-                    self.edit_duty_des = TextInput(
-                        text=f"""{df['Description'][i]}""")
-                    self.edit_duty_start = TextInput(
-                        text=f"""{df['Start'][i]}""")
-                    self.edit_duty_end = TextInput(text=f"""{df['End'][i]}""")
-                    self.edit_duty_members = TextInput(
-                        text=f"""{df['Members'][i]}""")
-                    self.edit_duty_priority = TextInput(
-                        text=f"""{df['Priority'][i]}""")
-                    self.edit_duty_status = TextInput(
-                        text=f"""{df['Status'][i]}""")
-                    self.window.add_widget(self.edit_duty_name)
-                    self.window.add_widget(self.edit_duty_id)
-                    self.window.add_widget(self.edit_duty_des)
-                    self.window.add_widget(self.edit_duty_start)
-                    self.window.add_widget(self.edit_duty_end)
-                    self.window.add_widget(self.edit_duty_members)
-                    self.window.add_widget(self.edit_duty_priority)
-                    self.window.add_widget(self.edit_duty_status)
-                    self.window.add_widget(
-                        Label(text=f"""{project.Priority(int(df['Priority'][i])).name}"""))
-                    self.window.add_widget(
-                        Label(text=f"""{project.Status(int(df['Status'][i])).name}"""))
-
-        self.back = Button(
+    def setup_edit_interface(self) -> None:
+        """Set up the interface for editing duties."""
+        self.back_button = Button(
             text="back",
             size_hint=(1, 0.5),
             bold=True,
-            background_color='#00FFCE',
+            background_color='#00FFCE'
         )
-        self.back.bind(on_press=self.see_member_fun)
+        self.back_button.bind(on_press=self.see_member_fun)
 
-        self.edit_duty_id_getter = TextInput(hint_text="ID")
-        self.edit_duty_button = Button(text="edit",
-                                       size_hint=(1, 0.5),
-                                       bold=True,
-                                       background_color='#00FFCE')
+        self.edit_duty_id_getter = TextInput(hint_text="task id")
+        self.edit_duty_button = Button(
+            text="edit",
+            size_hint=(1, 0.5),
+            bold=True,
+            background_color='#00FFCE'
+        )
+        self.edit_duty_button.bind(on_press=self.edit_duty1)
+
         self.window.add_widget(self.edit_duty_id_getter)
         self.window.add_widget(self.edit_duty_button)
-        self.edit_duty_button.bind(on_press=self.edit_duty1)
-        self.window.add_widget(self.back)
+        self.window.add_widget(self.back_button)
 
     def comment_fun1(self, instance: Widget) -> None:
+        """Displays existing comments and allows adding a new comment to a duty."""
         self.window.clear_widgets()
         self.window.cols = 1
         reader = duty_file.read()
@@ -1119,7 +890,7 @@ class SayHello(App):
                     s += i + "\n"
                 self.comments_text = Label(
                     text=s,
-                    font_size=18,
+                    font_size=20,
                     color='#00FFCE'
                 )
                 self.window.add_widget(self.comments_text)
@@ -1144,54 +915,61 @@ class SayHello(App):
         self.window.add_widget(self.back)
 
     def new_comm_fun2(self, instance: Widget) -> None:
+        """Adds a new comment to a duty and updates its history."""
         reader = duty_file.read()
         for row in reader:
             if row[1] == self.edit_duty_id.text:
                 comm_list = eval(row[9])
-                comm_list.append(str(datetime.datetime.now()) + "  " +
+                comm_list.append(str(datetime.now()) + "  " +
                                  self.username.text + " : " + self.new_comm.text)
                 history_list = eval(row[10])
         l = []
         for row in reader:
             if row[1] != self.edit_duty_id.text:
                 l.append(row)
-        with open("info/duty.csv", "w", newline="") as f:
-            Writer = csv.writer(f)
-            Writer.writerows(l)
-        duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
-                            status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list, comments=comm_list)
+        duty_file.update(l)
+        duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text,
+                            priority=self.edit_duty_priority.text,status=self.edit_duty_status.text, start=self.edit_duty_start.text,
+                            end=self.edit_duty_end.text, members=self.edit_duty_members.text, history=history_list, comments=comm_list)
         duty.save()
-        logger.info(f"""added a comment""")
-        self.comment_fun1("")
+        logger.info(f"""{self.username.text} added a comment""")
 
     def history_fun1(self, instance: Widget) -> None:
+        """Displays the history of a duty in a popup window."""
         reader = duty_file.read()
         hist = []
         for row in reader:
-            if str(row[1]) == self.edit_duty_id.text:
+            if str(row[1]) == self.edit_duty_id_getter.text:
                 hist = eval(row[10])
         s = ""
         for i in hist:
             s += i + "\n"
-        popup = Popup(title='Test popup', content=Label(text=s),
-                      auto_dismiss=True)
+
+        close_button = Button(text='Close', size_hint=(1, 0.2))
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text=s))
+        content.add_widget(close_button)
+
+        popup = Popup(title='Test popup', content=content, auto_dismiss=False)
+        close_button.bind(on_press=popup.dismiss)
         popup.open()
 
     def edit_duty_link1(self, instance: Widget) -> None:
+        """Checks user membership and allows duty editing if the user is a member."""
         if self.username.text in self.edit_duty_members.text.split(","):
             self.edit_duty1()
         else:
-            self.duty_page1(self.proj_id_conf)
+            self.duty_page1("")
 
     def edit_duty1(self, id_changed):
+        """Displays duty details for editing."""
         self.window.clear_widgets()
         self.window.cols = 1
-        reader = duty_file.read()
         df = pd.read_csv("info/duty.csv")
-        for i, ID in zip(list(df['ID'].index), list(df['ID'])):
+        for i, ID in zip(list(df['Task_id'].index), list(df['Task_id'])):
             if ID == self.edit_duty_id_getter.text:
                 self.edit_duty_name = TextInput(text=f"""{df['Title'][i]}""")
-                self.edit_duty_id = TextInput(text=f"""{df['ID'][i]}""")
+                self.edit_duty_id = TextInput(text=f"""{df['Task_id'][i]}""")
                 self.edit_duty_des = TextInput(
                     text=f"""{df['Description'][i]}""")
                 self.edit_duty_start = TextInput(text=f"""{df['Start'][i]}""")
@@ -1244,6 +1022,7 @@ class SayHello(App):
                 self.back.bind(on_press=self.duty_page1)
 
     def edit_second_fun(self, instance: Widget) -> None:
+        """Updates duty details upon editing and saves changes."""
         if self.username.text in self.edit_duty_members.text.split(","):
             reader = duty_file.read()
             for row in reader:
@@ -1251,27 +1030,26 @@ class SayHello(App):
                     history_list = eval(row[10])
                     if str(row[5]) != self.edit_duty_priority.text:
                         history_list.append(f"""{self.username.text} has updated priority in {
-                                            datetime.datetime.now()}""")
+                                            datetime.now()}""")
                     if str(row[6]) != self.edit_duty_status.text:
                         history_list.append(f"""{self.username.text} has updated status in {
-                                            datetime.datetime.now()}""")
+                                            datetime.now()}""")
                     history_list.append(f"""{self.username.text} has updated duty in {
-                                        datetime.datetime.now()}""")
+                                        datetime.now()}""")
             l = []
             for row in reader:
                 if row[1] != self.edit_duty_id.text:
                     l.append(row)
-            with open("info/duty.csv", "w", newline="") as f:
-                Writer = csv.writer(f)
-                Writer.writerows(l)
-            duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text, priority=self.edit_duty_priority.text,
-                                status=self.edit_duty_status.text, start=self.edit_duty_start.text, end=self.edit_duty_end.text, members=self.edit_duty_members.text, ID=self.edit_duty_id.text, history=history_list)
+            duty_file.update(l)
+            duty = project.Duty(proj_id=self.proj_id_conf.text, title=self.edit_duty_name.text, description=self.edit_duty_des.text,
+                                priority=self.edit_duty_priority.text,status=self.edit_duty_status.text, start=self.edit_duty_start.text,
+                                end=self.edit_duty_end.text, members=self.edit_duty_members.text, history=history_list)
             duty.save()
-            logger.info(f"""edited a duty""")
-            self.duty_page1(self.proj_id_conf)
+            logger.info(f"""{self.username.text} edited a duty""")
+            self.duty_page1("")
         else:
             self.window.add_widget(
-                Label(text="you can not edit this duty\n you are not a member "))
+                Label(text="You can not edit this duty.\nYou are not a member.", font_size=20, color='#FF0000'))
 
 
 if __name__ == "__main__":

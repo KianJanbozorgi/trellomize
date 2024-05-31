@@ -1,6 +1,6 @@
-from user import User, users_file, projects_file, duty_file, projects, duty
+from user import User, users_file, projects_file, manager_file, duty_file, projects, duty
 from enum import Enum
-import datetime
+from datetime import datetime, timedelta
 import uuid
 from typing import List, Any, Union, Tuple
 
@@ -12,7 +12,7 @@ class Project:
         """Create a new project."""
         self.Id = id
         if not self.check_id_unique():
-            raise ValueError("The selected id is not unique")
+            raise ValueError("The selected id is not unique.")
 
         self.title = title
         self.Description = description
@@ -36,9 +36,9 @@ class Project:
         if not projects.exists():
             projects_file.write(
                 ["Id", "Title", "Description", "Leader", "Members"])
-            
+
         if not duty.exists():
-            duty_file.write(["Proj_Id", "ID", "Members", "Title", "Description",
+            duty_file.write(["Project_id", "Task_id", "Members", "Title", "Description",
                             "Priority", "Status", "Start", "End", "Comments", "History"])
 
         projects_file.append(
@@ -47,7 +47,7 @@ class Project:
     def leader_projects(self, user: User) -> List[str]:
         """Get projects led by the user."""
         if not projects.exists():
-            raise FileNotFoundError("Project file not found.")
+            raise FileNotFoundError("You have not created any projects yet.")
 
         # Retrieve projects led by the user from the user object
         leader_projects = [f"(Id: {item[0]}, Title: {item[1]}, Description: {item[2]}, members: {"no body" if len(item) != 5 else item[4]})"
@@ -61,7 +61,7 @@ class Project:
     def user_projects(self, user: User) -> List[str]:
         """Get projects where the user is a member."""
         if not projects.exists():
-            raise FileNotFoundError("Project file not found.")
+            raise FileNotFoundError("You are not a member of any projects.")
 
         # Retrieve projects where the user is a member from the user object
         user_projects = [f"(Id: {item[0]}, Title: {item[1]}, Description: {item[2]})"
@@ -79,33 +79,32 @@ class Project:
             if id == info[1][0]:
                 return info
 
-    def input_members_func(self, input_username: str) -> List[str]:
-        """Parse input username string into list of usernames."""
-        return [name for name in input_username.split(",")]
-
     def add_member_func(self, input_username: str, id: Union[str, int]) -> None:
         """Add members to a project."""
-        input_members = self.input_members_func(input_username)
 
-        reader = users_file.read()
-        # Retrieve valid members from the users file
-        valid_members = [info[1] for info in reader]
-
-        # Check for valid members in the input
-        add_member = [
-            username for username in input_members if username in valid_members]
-
+        users = users_file.read()
+        manager = manager_file.read()
         projects = projects_file.read()
         project_index, project = self.find(id)
 
+        # Retrieve valid members from the users file and manager file
+        valid_usernames = [info[1] for info in users if project[3] != info[1]]
+        valid_members = [*valid_usernames, manager[1][0]]
+
         current_members = []
-        if len(project) > 4:
+        if len(project) == 5:
             current_members = [member for member in project[4].split(",")]
 
-        new_members = [
-            username for username in add_member if username not in current_members]
+        if input_username in current_members:
+            raise ValueError("user is already a member of the project.")
 
-        all_members = current_members + new_members
+        if input_username == project[3]:
+            raise ValueError("You are the leader of project.")
+
+        if input_username not in valid_members:
+            raise ValueError("username not found.")
+
+        all_members = [*current_members, input_username]
 
         if len(project) == 4:
             project.append(",".join(all_members))
@@ -117,33 +116,44 @@ class Project:
 
     def delete_member_func(self, input_username: str, id: Union[str, int]) -> None:
         """Delete members from a project."""
-        input_members = self.input_members_func(input_username)
 
         projects = projects_file.read()
         project_index, project = self.find(id)
 
         current_members = []
-        if len(project) > 4:
+        if len(project) == 5:
             current_members = [member for member in project[4].split(",")]
 
-        delete_members = [
-            member for member in input_members if member in current_members]
+        if input_username not in current_members:
+            raise ValueError("A user with such a username is not a member of the project.")
 
-        new_current_members = [
-            member for member in current_members if member not in delete_members]
+        current_members.remove(input_username)
 
-        project[4] = ",".join(new_current_members)
+        if not current_members:
+            project.pop()
+        else:
+            project[4] = ",".join(current_members)
+
         projects[project_index] = project
         projects_file.update(projects)
 
     def delete_project(self, id: Union[str, int]) -> None:
         """Delete a project by id."""
         reader = projects_file.read()
+        project_title = ""
         for project in reader:
             if str(project[0]) == id:
+                project_title = project[1]
                 reader.remove(project)
+                break
         projects_file.update(reader)
-
+        return project_title
+    
+    def check_id(self, id, projects_list):
+        for project in projects_list:
+            if str(id) in project:
+                return
+        raise ValueError("There is no project with this ID.")
 
 class Priority(Enum):
     """Enumeration class for duty priority levels."""
@@ -166,10 +176,10 @@ class Duty:
     """Class representing a duty."""
 
     def __init__(self, proj_id: Union[str, int] = None, members: List[str] = None, title: str = "no title", description: str = "no data", priority: int = 1,
-                 history: List[str] = [], status: int = 1, start: str = str(datetime.datetime.now()), end: datetime.datetime = datetime.datetime.now() + datetime.timedelta(hours=24),
-                 comments: List[str] = [],  ID: uuid.UUID = uuid.uuid4()) -> None:
+                 history: List[str] = [], status: int = 1, start: str = str(datetime.now()), end: datetime = datetime.now() + timedelta(hours=24),
+                 comments: List[str] = []) -> None:
         """Initialize a Duty instance."""
-        self.Id = ID
+        self.task_id : uuid.UUID = self.check_id_unique()
         self.members = members
         self.title = title
         self.description = description
@@ -181,7 +191,18 @@ class Duty:
         self.comments = comments
         self.history = history
 
+    def check_id_unique(self):
+        """Generates a unique task ID not present in existing tasks."""
+        tasks = duty_file.read()
+        while True:
+            self.task_id = uuid.uuid4()
+            for task in tasks:
+                if self.task_id == task[2]:
+                    break
+            else:
+                return self.task_id
+
     def save(self) -> None:
         """Save duty information to file."""
         duty_file.append(
-            [self.proj_id, self.Id, self.members, self.title, self.description, self.priority, self.status, self.start, self.end, self.comments, self.history])
+            [self.proj_id, self.task_id, self.members, self.title, self.description, self.priority, self.status, self.start, self.end, self.comments, self.history])
