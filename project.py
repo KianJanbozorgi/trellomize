@@ -1,4 +1,4 @@
-from user import User, users_file, projects_file, manager_file, duty_file, projects, duty
+from user import User, users_file, projects_file, manager_file, duty_file, projects, duty, manager
 from enum import Enum
 from datetime import datetime, timedelta
 import uuid
@@ -81,15 +81,15 @@ class Project:
 
     def add_member_func(self, input_username: str, id: Union[str, int]) -> None:
         """Add members to a project."""
-
         users = users_file.read()
-        manager = manager_file.read()
         projects = projects_file.read()
         project_index, project = self.find(id)
 
         # Retrieve valid members from the users file and manager file
         valid_usernames = [info[1] for info in users if project[3] != info[1]]
-        valid_members = [*valid_usernames, manager[1][0]]
+        if manager.exists(): 
+            reader = manager_file.read() 
+            valid_usernames = [*valid_usernames, reader[1][0]]
 
         current_members = []
         if len(project) == 5:
@@ -101,7 +101,7 @@ class Project:
         if input_username == project[3]:
             raise ValueError("You are the leader of project.")
 
-        if input_username not in valid_members:
+        if input_username not in valid_usernames:
             raise ValueError("username not found.")
 
         all_members = [*current_members, input_username]
